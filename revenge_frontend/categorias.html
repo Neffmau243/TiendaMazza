@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Categorías - Revenge POS</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">⚡ REVENGE</div>
+        <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem;">POS System</div>
+      </div>
+
+      <nav>
+        <ul class="sidebar-menu" id="sidebarMenu">
+          <!-- El menú se genera dinámicamente según el rol -->
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button onclick="cerrarSesion()" class="btn btn-danger" style="width: 100%;">
+          <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Navbar -->
+      <nav class="navbar">
+        <div>
+          <h2 style="color: var(--color-azul); margin: 0;">
+            <i class="fas fa-tags"></i> Categorías
+          </h2>
+        </div>
+        <div class="navbar-user">
+          <div class="user-info">
+            <div class="user-name" id="userName">Usuario</div>
+            <div class="user-role" id="userRole">Rol</div>
+          </div>
+          <div style="width: 40px; height: 40px; background: var(--color-amarillo); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--color-azul);">
+            <i class="fas fa-user"></i>
+          </div>
+        </div>
+      </nav>
+      </nav>
+
+      <div class="content">
+        <button onclick="abrirModal()" class="btn btn-primary mb-2">
+          <i class="fas fa-plus"></i> Nueva Categoría
+        </button>
+
+        <div class="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="categoriasTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="modalCategoria" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Nueva Categoría</h3>
+        <button onclick="cerrarModal()" class="btn-close">&times;</button>
+      </div>
+      <form id="formCategoria" onsubmit="guardar(event)">
+        <div class="modal-body">
+          <input type="hidden" id="categoriaId">
+          <div class="form-group">
+            <label for="nombre">Nombre *</label>
+            <input type="text" id="nombre" required maxlength="50">
+          </div>
+          <div class="form-group">
+            <label for="descripcion">Descripción</label>
+            <textarea id="descripcion" rows="3" maxlength="200"></textarea>
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" id="activo" checked> Activo</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/menu.js"></script>
+  <script>
+    let usuario = null;
+    let categorias = [];
+    
+    window.addEventListener('DOMContentLoaded', () => {
+      // Verificar sesión y permisos
+      usuario = verificarSesion();
+      if (!esAdministrador()) {
+        alert('Solo administradores pueden gestionar categorías');
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      // El menú y usuario ya se cargan en menu.js
+      cargar();
+    });
+
+    async function cargar() {
+      const response = await apiGet(ENDPOINTS.categorias.list);
+      if (response.success && response.data.data) {
+        categorias = response.data.data;
+        
+        // Normalizar campos
+        categorias.forEach(c => {
+          c.categoria_id = c.categoria_id || c.id;
+          // Si activo no existe o es null, considerarlo activo por defecto
+          c.activo = c.activo !== undefined && c.activo !== null ? c.activo : true;
+        });
+        
+        mostrar(categorias);
+      }
+    }
+
+    function mostrar(data) {
+      console.log('📋 Mostrando categorías en tabla:', data.length, 'categorías');
+      const tbody = document.getElementById('categoriasTableBody');
+      tbody.innerHTML = data.map(cat => {
+        console.log('🏷️ Procesando categoría:', cat.nombre, 'ID:', cat.categoria_id);
+        return `
+        <tr>
+          <td><strong>${cat.nombre}</strong></td>
+          <td>${cat.descripcion || '-'}</td>
+          <td>${cat.activo ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-secondary">Inactivo</span>'}</td>
+          <td>
+            <button onclick="editar(${cat.categoria_id})" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></button>
+            <button onclick="toggleEstado(${cat.categoria_id}, ${cat.activo})" class="btn btn-sm ${cat.activo ? 'btn-warning' : 'btn-success'}">
+              <i class="fas fa-${cat.activo ? 'ban' : 'check'}"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+      }).join('');
+      console.log('✅ Tabla de categorías renderizada');
+    }
+
+    function abrirModal() {
+      document.getElementById('modalTitle').textContent = 'Nueva Categoría';
+      document.getElementById('formCategoria').reset();
+      document.getElementById('categoriaId').value = '';
+      document.getElementById('activo').checked = true;
+      document.getElementById('modalCategoria').classList.remove('hidden');
+    }
+
+    async function editar(id) {
+      console.log('🔧 Botón EDITAR clickeado - ID:', id);
+      const response = await apiGet(`${ENDPOINTS.categorias.get}/${id}`);
+      console.log('📡 Respuesta de API editar:', response);
+      if (response.success && response.data.data) {
+        const cat = response.data.data;
+        console.log('✅ Categoría cargada para editar:', cat);
+        console.log('  - cat.id:', cat.id);
+        console.log('  - cat.categoria_id:', cat.categoria_id);
+        
+        // Usar id o categoria_id, el que exista
+        const catId = cat.id || cat.categoria_id;
+        console.log('  - ID a usar:', catId);
+        
+        document.getElementById('modalTitle').textContent = 'Editar Categoría';
+        document.getElementById('categoriaId').value = catId;
+        document.getElementById('nombre').value = cat.nombre;
+        document.getElementById('descripcion').value = cat.descripcion || '';
+        document.getElementById('activo').checked = cat.activo;
+        
+        console.log('📝 Campo categoriaId establecido a:', document.getElementById('categoriaId').value);
+        document.getElementById('modalCategoria').classList.remove('hidden');
+        console.log('🎯 Modal abierto para editar');
+      } else {
+        console.error('❌ Error al cargar categoría para editar');
+      }
+    }
+
+    async function guardar(e) {
+      e.preventDefault();
+      console.log('💾 Iniciando guardado de categoría...');
+      
+      const id = document.getElementById('categoriaId').value;
+      console.log('  - ID del campo oculto:', id);
+      console.log('  - ID es vacío?', !id);
+      
+      const datos = {
+        nombre: document.getElementById('nombre').value.trim(),
+        descripcion: document.getElementById('descripcion').value.trim() || null,
+        activo: document.getElementById('activo').checked
+      };
+      console.log('  - Datos a enviar:', datos);
+
+      console.log(id ? '  - Modo: ACTUALIZAR' : '  - Modo: CREAR');
+      const response = id 
+        ? await apiPut(`${ENDPOINTS.categorias.update}/${id}`, datos)
+        : await apiPost(ENDPOINTS.categorias.create, datos);
+
+      console.log('📡 Respuesta de guardar:', response);
+      if (response.success) {
+        console.log('✅ Categoría guardada exitosamente');
+        mostrarToast(id ? 'Categoría actualizada' : 'Categoría creada', 'success');
+        cerrarModal();
+        cargar();
+      } else {
+        console.error('❌ Error al guardar categoría');
+      }
+    }
+
+    async function toggleEstado(id, estado) {
+      console.log('🔄 Botón TOGGLE ESTADO clickeado - ID:', id, 'Estado actual:', estado);
+      const nuevoEstado = !estado;
+      console.log('➡️ Cambiando estado a:', nuevoEstado);
+      const response = await apiPut(`${ENDPOINTS.categorias.update}/${id}`, { activo: nuevoEstado });
+      console.log('📡 Respuesta de API toggleEstado:', response);
+      if (response.success) {
+        console.log('✅ Estado actualizado correctamente');
+        mostrarToast('Estado actualizado', 'success');
+        cargar();
+      } else {
+        console.error('❌ Error al actualizar estado');
+      }
+    }
+
+    function cerrarModal() {
+      document.getElementById('modalCategoria').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

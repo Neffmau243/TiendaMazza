@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proveedores - Revenge POS</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">⚡ REVENGE</div>
+        <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem;">POS System</div>
+      </div>
+
+      <nav>
+        <ul class="sidebar-menu" id="sidebarMenu">
+          <!-- El menú se genera dinámicamente según el rol -->
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button onclick="cerrarSesion()" class="btn btn-danger" style="width: 100%;">
+          <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Navbar -->
+      <nav class="navbar">
+        <div>
+          <h2 style="color: var(--color-azul); margin: 0;">
+            <i class="fas fa-building"></i> Proveedores
+          </h2>
+        </div>
+        <div class="navbar-user">
+          <div class="user-info">
+            <div class="user-name" id="userName">Usuario</div>
+            <div class="user-role" id="userRole">Rol</div>
+          </div>
+          <div style="width: 40px; height: 40px; background: var(--color-amarillo); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--color-azul);">
+            <i class="fas fa-user"></i>
+          </div>
+        </div>
+      </nav>
+      </nav>
+
+      <div class="content">
+        <button onclick="abrirModal()" class="btn btn-primary mb-2">
+          <i class="fas fa-plus"></i> Nuevo Proveedor
+        </button>
+
+        <div class="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Contacto</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="proveedoresTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="modalProveedor" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Nuevo Proveedor</h3>
+        <button onclick="cerrarModal()" class="btn-close">&times;</button>
+      </div>
+      <form id="formProveedor" onsubmit="guardar(event)">
+        <div class="modal-body">
+          <input type="hidden" id="proveedorId">
+          <div class="form-group">
+            <label for="nombre">Nombre *</label>
+            <input type="text" id="nombre" required maxlength="100">
+          </div>
+          <div class="form-group">
+            <label for="nombre_contacto">Nombre de Contacto</label>
+            <input type="text" id="nombre_contacto" maxlength="100">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="telefono">Teléfono</label>
+              <input type="tel" id="telefono" maxlength="20">
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" maxlength="100">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="direccion">Dirección</label>
+            <textarea id="direccion" rows="3" maxlength="200"></textarea>
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" id="activo" checked> Activo</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/menu.js"></script>
+  <script>
+    let usuario = null;
+    let proveedores = [];
+    
+    window.addEventListener('DOMContentLoaded', () => {
+      // Verificar sesión y permisos
+      usuario = verificarSesion();
+      if (!esAdministrador()) {
+        alert('Solo administradores pueden gestionar proveedores');
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      // El menú y usuario ya se cargan en menu.js
+      cargar();
+    });
+
+    async function cargar() {
+      const response = await apiGet(ENDPOINTS.proveedores.list);
+      if (response.success && response.data.data) {
+        proveedores = response.data.data;
+        
+        // Normalizar campos
+        proveedores.forEach(p => {
+          p.proveedor_id = p.proveedor_id || p.id;
+          p.nombre_contacto = p.nombre_contacto || p.contacto || null;
+          // Si activo no existe o es null, considerarlo activo por defecto
+          p.activo = p.activo !== undefined && p.activo !== null ? p.activo : true;
+        });
+        
+        mostrar(proveedores);
+      }
+    }
+
+    function mostrar(data) {
+      const tbody = document.getElementById('proveedoresTableBody');
+      tbody.innerHTML = data.map(prov => `
+        <tr>
+          <td><strong>${prov.nombre}</strong></td>
+          <td>${prov.nombre_contacto || '-'}</td>
+          <td>${prov.telefono || '-'}</td>
+          <td>${prov.email || '-'}</td>
+          <td>${prov.activo ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-secondary">Inactivo</span>'}</td>
+          <td>
+            <button onclick="editar(${prov.proveedor_id})" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></button>
+            <button onclick="toggleEstado(${prov.proveedor_id}, ${prov.activo})" class="btn btn-sm ${prov.activo ? 'btn-warning' : 'btn-success'}">
+              <i class="fas fa-${prov.activo ? 'ban' : 'check'}"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function abrirModal() {
+      document.getElementById('modalTitle').textContent = 'Nuevo Proveedor';
+      document.getElementById('formProveedor').reset();
+      document.getElementById('proveedorId').value = '';
+      document.getElementById('activo').checked = true;
+      document.getElementById('modalProveedor').classList.remove('hidden');
+    }
+
+    async function editar(id) {
+      const response = await apiGet(`${ENDPOINTS.proveedores.get}/${id}`);
+      if (response.success && response.data.data) {
+        const prov = response.data.data;
+        document.getElementById('modalTitle').textContent = 'Editar Proveedor';
+        document.getElementById('proveedorId').value = prov.proveedor_id;
+        document.getElementById('nombre').value = prov.nombre;
+        document.getElementById('nombre_contacto').value = prov.nombre_contacto || '';
+        document.getElementById('telefono').value = prov.telefono || '';
+        document.getElementById('email').value = prov.email || '';
+        document.getElementById('direccion').value = prov.direccion || '';
+        document.getElementById('activo').checked = prov.activo;
+        document.getElementById('modalProveedor').classList.remove('hidden');
+      }
+    }
+
+    async function guardar(e) {
+      e.preventDefault();
+      const id = document.getElementById('proveedorId').value;
+      const datos = {
+        nombre: document.getElementById('nombre').value.trim(),
+        nombre_contacto: document.getElementById('nombre_contacto').value.trim() || null,
+        telefono: document.getElementById('telefono').value.trim() || null,
+        email: document.getElementById('email').value.trim() || null,
+        direccion: document.getElementById('direccion').value.trim() || null,
+        activo: document.getElementById('activo').checked
+      };
+
+      const response = id 
+        ? await apiPut(`${ENDPOINTS.proveedores.update}/${id}`, datos)
+        : await apiPost(ENDPOINTS.proveedores.create, datos);
+
+      if (response.success) {
+        mostrarToast(id ? 'Proveedor actualizado' : 'Proveedor creado', 'success');
+        cerrarModal();
+        cargar();
+      }
+    }
+
+    async function toggleEstado(id, estado) {
+      const response = await apiPut(`${ENDPOINTS.proveedores.update}/${id}`, { activo: !estado });
+      if (response.success) {
+        mostrarToast('Estado actualizado', 'success');
+        cargar();
+      }
+    }
+
+    function cerrarModal() {
+      document.getElementById('modalProveedor').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

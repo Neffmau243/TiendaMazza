@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuarios - Revenge POS</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">⚡ REVENGE</div>
+        <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem;">POS System</div>
+      </div>
+
+      <nav>
+        <ul class="sidebar-menu" id="sidebarMenu">
+          <!-- El menú se genera dinámicamente según el rol -->
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button onclick="cerrarSesion()" class="btn btn-danger" style="width: 100%;">
+          <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Navbar -->
+      <nav class="navbar">
+        <div>
+          <h2 style="color: var(--color-azul); margin: 0;">
+            <i class="fas fa-users"></i> Usuarios
+          </h2>
+        </div>
+        <div class="navbar-user">
+          <div class="user-info">
+            <div class="user-name" id="userName">Usuario</div>
+            <div class="user-role" id="userRole">Rol</div>
+          </div>
+          <div style="width: 40px; height: 40px; background: var(--color-amarillo); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--color-azul);">
+            <i class="fas fa-user"></i>
+          </div>
+        </div>
+      </nav>
+      </nav>
+
+      <div class="content">
+        <button onclick="abrirModal()" class="btn btn-primary mb-2">
+          <i class="fas fa-plus"></i> Nuevo Usuario
+        </button>
+
+        <div class="card">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="usuariosTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="modalUsuario" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Nuevo Usuario</h3>
+        <button onclick="cerrarModal()" class="btn-close">&times;</button>
+      </div>
+      <form id="formUsuario" onsubmit="guardar(event)">
+        <div class="modal-body">
+          <input type="hidden" id="usuarioId">
+          <div class="form-group">
+            <label for="nombre">Nombre *</label>
+            <input type="text" id="nombre" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Contraseña <span id="passwordLabel">*</span></label>
+            <input type="password" id="password">
+            <small>Deja en blanco para mantener la contraseña actual al editar</small>
+          </div>
+          <div class="form-group">
+            <label for="rol_id">Rol *</label>
+            <select id="rol_id" required>
+              <option value="1">Administrador</option>
+              <option value="2">Cajero</option>
+              <option value="3">Almacenista</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" id="activo" checked> Activo</label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" onclick="cerrarModal()" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/menu.js"></script>
+  <script>
+    let usuario = null;
+    const ROLES_NOMBRES = { 1: 'Administrador', 2: 'Cajero', 3: 'Almacenista' };
+    let usuarios = [];
+    
+    window.addEventListener('DOMContentLoaded', () => {
+      // Verificar sesión y permisos
+      usuario = verificarSesion();
+      if (!esAdministrador()) {
+        alert('Solo administradores pueden gestionar usuarios');
+        window.location.href = 'dashboard.html';
+        return;
+      }
+
+      // El menú y usuario ya se cargan en menu.js
+      cargar();
+    });
+
+    async function cargar() {
+      const response = await apiGet(ENDPOINTS.usuarios.list);
+      if (response.success && response.data.data) {
+        usuarios = response.data.data;
+        
+        // Normalizar campos
+        usuarios.forEach(u => {
+          u.usuario_id = u.usuario_id || u.id;
+          // Si activo no existe o es null, considerarlo activo por defecto
+          u.activo = u.activo !== undefined && u.activo !== null ? u.activo : true;
+        });
+        
+        mostrar(usuarios);
+      }
+    }
+
+    function mostrar(data) {
+      console.log('📋 Mostrando usuarios en tabla:', data.length, 'usuarios');
+      const tbody = document.getElementById('usuariosTableBody');
+      tbody.innerHTML = data.map(u => {
+        console.log('👤 Procesando usuario:', u.nombre, 'ID:', u.usuario_id);
+        return `
+        <tr>
+          <td><strong>${u.nombre}</strong></td>
+          <td>${u.email}</td>
+          <td><span class="badge badge-info">${u.rol_nombre}</span></td>
+          <td>${u.activo ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-secondary">Inactivo</span>'}</td>
+          <td>
+            <button onclick="editar(${u.usuario_id})" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></button>
+            <button onclick="toggleEstado(${u.usuario_id}, ${u.activo})" class="btn btn-sm ${u.activo ? 'btn-warning' : 'btn-success'}">
+              <i class="fas fa-${u.activo ? 'ban' : 'check'}"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+      }).join('');
+      console.log('✅ Tabla de usuarios renderizada');
+    }
+
+    function abrirModal() {
+      document.getElementById('modalTitle').textContent = 'Nuevo Usuario';
+      document.getElementById('formUsuario').reset();
+      document.getElementById('usuarioId').value = '';
+      document.getElementById('password').required = true;
+      document.getElementById('passwordLabel').textContent = '*';
+      document.getElementById('activo').checked = true;
+      document.getElementById('modalUsuario').classList.remove('hidden');
+    }
+
+    async function editar(id) {
+      console.log('🔧 Botón EDITAR clickeado - ID:', id);
+      const response = await apiGet(`${ENDPOINTS.usuarios.get}/${id}`);
+      console.log('📡 Respuesta de API editar:', response);
+      if (response.success && response.data.data) {
+        const u = response.data.data;
+        console.log('✅ Usuario cargado para editar:', u);
+        console.log('  - u.id:', u.id);
+        console.log('  - u.usuario_id:', u.usuario_id);
+        
+        // Usar id o usuario_id, el que exista
+        const userId = u.id || u.usuario_id;
+        console.log('  - ID a usar:', userId);
+        
+        document.getElementById('modalTitle').textContent = 'Editar Usuario';
+        document.getElementById('usuarioId').value = userId;
+        document.getElementById('nombre').value = u.nombre;
+        document.getElementById('email').value = u.email;
+        document.getElementById('password').value = '';
+        document.getElementById('password').required = false;
+        document.getElementById('passwordLabel').textContent = '';
+        document.getElementById('rol_id').value = u.rol_id;
+        document.getElementById('activo').checked = u.activo;
+        
+        console.log('📝 Campo usuarioId establecido a:', document.getElementById('usuarioId').value);
+        document.getElementById('modalUsuario').classList.remove('hidden');
+        console.log('🎯 Modal abierto para editar');
+      } else {
+        console.error('❌ Error al cargar usuario para editar');
+      }
+    }
+
+    async function guardar(e) {
+      e.preventDefault();
+      console.log('💾 Iniciando guardado de usuario...');
+      
+      const id = document.getElementById('usuarioId').value;
+      console.log('  - ID del campo oculto:', id);
+      console.log('  - ID es vacío?', !id);
+      
+      const password = document.getElementById('password').value.trim();
+      
+      const datos = {
+        nombre: document.getElementById('nombre').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        rol_id: parseInt(document.getElementById('rol_id').value),
+        activo: document.getElementById('activo').checked
+      };
+      console.log('  - Datos a enviar:', datos);
+
+      if (password) {
+        datos.password = password;
+        console.log('  - Incluyendo password');
+      }
+
+      console.log(id ? '  - Modo: ACTUALIZAR' : '  - Modo: CREAR');
+      const response = id 
+        ? await apiPut(`${ENDPOINTS.usuarios.update}/${id}`, datos)
+        : await apiPost(ENDPOINTS.usuarios.create, datos);
+
+      console.log('📡 Respuesta de guardar:', response);
+      if (response.success) {
+        console.log('✅ Usuario guardado exitosamente');
+        mostrarToast(id ? 'Usuario actualizado' : 'Usuario creado', 'success');
+        cerrarModal();
+        cargar();
+      } else {
+        console.error('❌ Error al guardar usuario');
+      }
+    }
+
+    async function toggleEstado(id, estado) {
+      console.log('🔄 Botón TOGGLE ESTADO clickeado - ID:', id, 'Estado actual:', estado);
+      const nuevoEstado = !estado;
+      console.log('➡️ Cambiando estado a:', nuevoEstado);
+      const response = await apiPut(`${ENDPOINTS.usuarios.update}/${id}`, { activo: nuevoEstado });
+      console.log('📡 Respuesta de API toggleEstado:', response);
+      if (response.success) {
+        console.log('✅ Estado actualizado correctamente');
+        mostrarToast('Estado actualizado', 'success');
+        cargar();
+      } else {
+        console.error('❌ Error al actualizar estado');
+      }
+    }
+
+    function cerrarModal() {
+      document.getElementById('modalUsuario').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

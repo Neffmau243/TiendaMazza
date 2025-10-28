@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Productos - Revenge POS</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/forms.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">⚡ REVENGE</div>
+        <div style="font-size: 0.85rem; opacity: 0.8; margin-top: 0.5rem;">POS System</div>
+      </div>
+
+      <nav>
+        <ul class="sidebar-menu" id="sidebarMenu">
+          <!-- El menú se genera dinámicamente según el rol -->
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button onclick="cerrarSesion()" class="btn btn-danger" style="width: 100%;">
+          <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Navbar -->
+      <nav class="navbar">
+        <div>
+          <h2 style="color: var(--color-azul); margin: 0;">
+            <i class="fas fa-box"></i> Gestión de Productos
+          </h2>
+        </div>
+        <div class="navbar-user">
+          <div class="user-info">
+            <div class="user-name" id="userName">Usuario</div>
+            <div class="user-role" id="userRole">Rol</div>
+          </div>
+          <div style="width: 40px; height: 40px; background: var(--color-amarillo); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--color-azul);">
+            <i class="fas fa-user"></i>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Botones de acción -->
+        <div class="flex justify-between align-center mb-2">
+          <button onclick="abrirModalProducto()" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nuevo Producto
+          </button>
+          
+          <div class="flex gap-1">
+            <input type="text" id="searchInput" placeholder="Buscar por nombre o código..." style="width: 300px;">
+            <button onclick="buscarProductos()" class="btn btn-secondary">
+              <i class="fas fa-search"></i> Buscar
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card mb-2">
+          <div class="flex gap-1 align-center">
+            <label>Categoría:</label>
+            <select id="filterCategoria" onchange="filtrarProductos()">
+              <option value="">Todas</option>
+            </select>
+
+            <label class="ml-2">Estado:</label>
+            <select id="filterEstado" onchange="filtrarProductos()">
+              <option value="">Todos</option>
+              <option value="1">Activos</option>
+              <option value="0">Inactivos</option>
+            </select>
+
+            <label class="ml-2">Stock:</label>
+            <select id="filterStock" onchange="filtrarProductos()">
+              <option value="">Todos</option>
+              <option value="bajo">Stock Bajo</option>
+              <option value="alto">Stock Suficiente</option>
+            </select>
+
+            <button onclick="limpiarFiltros()" class="btn btn-secondary btn-sm ml-auto">
+              <i class="fas fa-times"></i> Limpiar Filtros
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabla de productos -->
+        <div class="card">
+          <div id="loadingProductos" class="text-center" style="display: none;">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Cargando productos...</p>
+          </div>
+
+          <div id="tablaProductos">
+            <table>
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Nombre</th>
+                  <th>Categoría</th>
+                  <th>Precio Compra</th>
+                  <th>Precio Venta</th>
+                  <th>Stock</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="productosTableBody">
+                <tr>
+                  <td colspan="8" class="text-center">No hay productos</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Producto -->
+  <div id="modalProducto" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle"><i class="fas fa-box"></i> Nuevo Producto</h3>
+        <button onclick="cerrarModalProducto()" class="btn-close">&times;</button>
+      </div>
+      
+      <form id="formProducto" onsubmit="guardarProducto(event)">
+        <div class="modal-body">
+          <input type="hidden" id="productoId">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nombre">Nombre *</label>
+              <input type="text" id="nombre" required maxlength="100">
+            </div>
+
+            <div class="form-group">
+              <label for="codigo_barras">Código de Barras *</label>
+              <input type="text" id="codigo_barras" required maxlength="50">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="categoria_id">Categoría *</label>
+              <select id="categoria_id" required>
+                <option value="">Seleccionar...</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="proveedor_id">Proveedor</label>
+              <select id="proveedor_id">
+                <option value="">Seleccionar...</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="descripcion">Descripción</label>
+            <textarea id="descripcion" rows="3" maxlength="255"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="precio_compra">Precio Compra *</label>
+              <input type="number" id="precio_compra" step="0.01" min="0" required>
+            </div>
+
+            <div class="form-group">
+              <label for="precio_venta">Precio Venta *</label>
+              <input type="number" id="precio_venta" step="0.01" min="0" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="stock_actual">Stock Actual *</label>
+              <input type="number" id="stock_actual" min="0" required>
+            </div>
+
+            <div class="form-group">
+              <label for="stock_minimo">Stock Mínimo *</label>
+              <input type="number" id="stock_minimo" min="0" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="activo" checked>
+              Producto Activo
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" onclick="cerrarModalProducto()" class="btn btn-secondary">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/menu.js"></script>
+  <script src="js/productos.js"></script>
+</body>
+</html>
