@@ -54,8 +54,8 @@ async function cargarCatalogos() {
   if (catResponse.success && catResponse.data.data) {
     const select = document.getElementById('inventarioCategoria');
     catResponse.data.data.forEach(cat => {
-      if (cat.activo) {
-        select.innerHTML += `<option value="${cat.categoria_id}">${cat.nombre}</option>`;
+      if (cat.estado_id === 1) { // 1 = activo
+        select.innerHTML += `<option value="${cat.id}">${cat.nombre}</option>`;
       }
     });
   }
@@ -65,8 +65,8 @@ async function cargarCatalogos() {
   if (provResponse.success && provResponse.data.data) {
     const select = document.getElementById('comprasProveedor');
     provResponse.data.data.forEach(prov => {
-      if (prov.activo) {
-        select.innerHTML += `<option value="${prov.proveedor_id}">${prov.nombre}</option>`;
+      if (prov.estado_id === 1) { // 1 = activo
+        select.innerHTML += `<option value="${prov.id}">${prov.nombre}</option>`;
       }
     });
   }

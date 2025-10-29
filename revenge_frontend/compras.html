@@ -212,19 +212,6 @@
     }
 
     function registrarEventos() {
-      // Evento para cambio de proveedor
-      const selectProveedor = document.getElementById('proveedor_id');
-      if (selectProveedor) {
-        selectProveedor.addEventListener('change', function() {
-          const proveedorId = this.value;
-          console.log('🔄 Proveedor seleccionado:', proveedorId);
-          filtrarProductosPorProveedor(proveedorId);
-          // Limpiar campos de producto
-          document.getElementById('cantidad').value = 1;
-          document.getElementById('precio_unitario').value = '';
-        });
-      }
-
       // Evento para cambio de producto (autocompletar precio)
       const selectProducto = document.getElementById('producto_id');
       if (selectProducto) {
@@ -238,80 +225,30 @@
 
     async function cargarProveedores() {
       const response = await apiGet(ENDPOINTS.proveedores.list);
-      console.log('🔍 Response proveedores:', response);
       if (response.success && response.data.data) {
-        console.log('📦 Proveedores recibidos:', response.data.data);
-        // Quitar filtro de activo - usar todos los proveedores
-        proveedores = response.data.data;
-        console.log('✅ Proveedores disponibles:', proveedores);
-        
-        // Normalizar IDs
-        proveedores.forEach(p => {
-          p.proveedor_id = p.proveedor_id || p.id;
-        });
+        // Filtrar solo proveedores activos (estado_id === 1)
+        proveedores = response.data.data.filter(p => p.estado_id === 1);
         
         const select = document.getElementById('proveedor_id');
         select.innerHTML = '<option value="">Seleccionar...</option>';
         proveedores.forEach(p => {
-          select.innerHTML += `<option value="${p.proveedor_id}">${p.nombre}</option>`;
+          select.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
         });
-        console.log('🎯 Select proveedores actualizado con', proveedores.length, 'opciones');
       }
     }
 
     async function cargarProductos() {
       const response = await apiGet(ENDPOINTS.productos.list);
-      console.log('🔍 Response productos:', response);
       if (response.success && response.data.data) {
-        console.log('📦 Productos recibidos:', response.data.data);
-        // Guardar TODOS los productos
         productos = response.data.data;
         
-        // Normalizar IDs y proveedor_id
-        productos.forEach(p => {
-          p.producto_id = p.producto_id || p.id;
-          // Importante: el proveedor_id puede venir como 'proveedor_id' o como un campo anidado
-          p.proveedor_id = p.proveedor_id || p.proveedor?.id || null;
-        });
-        
-        console.log('✅ Productos disponibles:', productos);
-        console.log('🔍 Ejemplo producto[0]:', productos[0]);
-        
-        // No llenar el select aún - esperar a que se seleccione un proveedor
+        // Llenar el select con todos los productos activos
         const select = document.getElementById('producto_id');
-        select.innerHTML = '<option value="">Primero selecciona un proveedor...</option>';
-        select.disabled = true;
-      }
-    }
-
-    // Función para filtrar productos por proveedor
-    function filtrarProductosPorProveedor(proveedorId) {
-      const select = document.getElementById('producto_id');
-      
-      if (!proveedorId) {
-        select.innerHTML = '<option value="">Primero selecciona un proveedor...</option>';
-        select.disabled = true;
-        return;
-      }
-      
-      console.log('🔍 Filtrando por proveedor_id:', proveedorId);
-      console.log('🔍 Primer producto completo:', productos[0]);
-      
-      // Filtrar productos del proveedor seleccionado
-      const productosFiltrados = productos.filter(p => {
-        console.log(`  Producto "${p.nombre}": proveedor_id=${p.proveedor_id}`);
-        return p.proveedor_id == proveedorId;
-      });
-      console.log(`🔍 Productos del proveedor ${proveedorId}:`, productosFiltrados);
-      
-      select.disabled = false;
-      select.innerHTML = '<option value="">Seleccionar producto...</option>';
-      
-      if (productosFiltrados.length === 0) {
-        select.innerHTML += '<option value="" disabled>No hay productos de este proveedor</option>';
-      } else {
-        productosFiltrados.forEach(p => {
-          select.innerHTML += `<option value="${p.producto_id}" data-precio="${p.precio_compra}">${p.nombre} (${p.codigo_barras})</option>`;
+        select.innerHTML = '<option value="">Seleccionar producto...</option>';
+        productos.forEach(p => {
+          if (p.estado_id === 1) { // Solo productos activos
+            select.innerHTML += `<option value="${p.id}" data-precio="${p.precio_compra}">${p.nombre} (${p.codigo_barras})</option>`;
+          }
         });
       }
     }
@@ -333,13 +270,13 @@
       const tbody = document.getElementById('comprasTableBody');
       tbody.innerHTML = data.map(c => `
         <tr>
-          <td><strong>${c.folio || 'S/F'}</strong></td>
-          <td>${formatearFecha(c.fecha_compra)}</td>
+          <td><strong>${c.numero_factura || 'S/F'}</strong></td>
+          <td>${formatearFecha(c.fecha)}</td>
           <td>${c.proveedor_nombre || 'N/A'}</td>
           <td><strong>${formatearMoneda(c.total)}</strong></td>
           <td>${c.usuario_nombre || 'N/A'}</td>
           <td>
-            <button onclick="verDetalle(${c.compra_id})" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></button>
+            <button onclick="verDetalle(${c.id})" class="btn btn-sm btn-primary"><i class="fas fa-eye"></i></button>
           </td>
         </tr>
       `).join('');
@@ -362,7 +299,7 @@
         return;
       }
 
-      const producto = productos.find(p => p.producto_id === prodId);
+      const producto = productos.find(p => p.id === prodId);
       productosSeleccionados.push({
         producto_id: prodId,
         nombre: producto.nombre,
@@ -407,9 +344,9 @@
 
       const datos = {
         proveedor_id: parseInt(document.getElementById('proveedor_id').value),
-        usuario_id: usuario.usuario_id,
-        folio: document.getElementById('folio').value.trim() || null,
-        productos: productosSeleccionados
+        usuario_id: usuario.usuario_id || usuario.id,
+        numero_factura: document.getElementById('folio').value.trim() || null,
+        items: productosSeleccionados
       };
 
       const response = await apiPost(ENDPOINTS.compras.create, datos);
@@ -424,10 +361,10 @@
       const response = await apiGet(`${ENDPOINTS.compras.get}/${id}`);
       if (response.success && response.data.data) {
         const c = response.data.data;
-        document.getElementById('detalleFolio').textContent = c.folio || 'S/F';
-        document.getElementById('detalleFecha').textContent = formatearFecha(c.fecha_compra);
+        document.getElementById('detalleFolio').textContent = c.numero_factura || 'S/F';
+        document.getElementById('detalleFecha').textContent = formatearFecha(c.fecha);
         document.getElementById('detalleProveedor').textContent = c.proveedor_nombre || 'N/A';
-        document.getElementById('detalleProductos').innerHTML = c.productos.map(p => `
+        document.getElementById('detalleProductos').innerHTML = c.detalles.map(p => `
           <tr>
             <td>${p.producto_nombre}</td>
             <td>${p.cantidad}</td>

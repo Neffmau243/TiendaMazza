@@ -143,36 +143,29 @@
       const response = await apiGet(ENDPOINTS.proveedores.list);
       if (response.success && response.data.data) {
         proveedores = response.data.data;
-        
-        // Normalizar campos
-        proveedores.forEach(p => {
-          p.proveedor_id = p.proveedor_id || p.id;
-          p.nombre_contacto = p.nombre_contacto || p.contacto || null;
-          // Si activo no existe o es null, considerarlo activo por defecto
-          p.activo = p.activo !== undefined && p.activo !== null ? p.activo : true;
-        });
-        
         mostrar(proveedores);
       }
     }
 
     function mostrar(data) {
       const tbody = document.getElementById('proveedoresTableBody');
-      tbody.innerHTML = data.map(prov => `
+      tbody.innerHTML = data.map(prov => {
+        const activo = prov.estado_id === 1;
+        return `
         <tr>
           <td><strong>${prov.nombre}</strong></td>
-          <td>${prov.nombre_contacto || '-'}</td>
+          <td>${prov.contacto || '-'}</td>
           <td>${prov.telefono || '-'}</td>
           <td>${prov.email || '-'}</td>
-          <td>${prov.activo ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-secondary">Inactivo</span>'}</td>
+          <td>${activo ? '<span class="badge badge-success">Activo</span>' : '<span class="badge badge-secondary">Inactivo</span>'}</td>
           <td>
-            <button onclick="editar(${prov.proveedor_id})" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></button>
-            <button onclick="toggleEstado(${prov.proveedor_id}, ${prov.activo})" class="btn btn-sm ${prov.activo ? 'btn-warning' : 'btn-success'}">
-              <i class="fas fa-${prov.activo ? 'ban' : 'check'}"></i>
+            <button onclick="editar(${prov.id})" class="btn btn-sm btn-primary"><i class="fas fa-edit"></i></button>
+            <button onclick="toggleEstado(${prov.id}, ${activo})" class="btn btn-sm ${activo ? 'btn-warning' : 'btn-success'}">
+              <i class="fas fa-${activo ? 'ban' : 'check'}"></i>
             </button>
           </td>
         </tr>
-      `).join('');
+      `}).join('');
     }
 
     function abrirModal() {
@@ -188,13 +181,13 @@
       if (response.success && response.data.data) {
         const prov = response.data.data;
         document.getElementById('modalTitle').textContent = 'Editar Proveedor';
-        document.getElementById('proveedorId').value = prov.proveedor_id;
+        document.getElementById('proveedorId').value = prov.id || prov.proveedor_id;
         document.getElementById('nombre').value = prov.nombre;
-        document.getElementById('nombre_contacto').value = prov.nombre_contacto || '';
+        document.getElementById('nombre_contacto').value = prov.contacto || prov.nombre_contacto || '';
         document.getElementById('telefono').value = prov.telefono || '';
         document.getElementById('email').value = prov.email || '';
         document.getElementById('direccion').value = prov.direccion || '';
-        document.getElementById('activo').checked = prov.activo;
+        document.getElementById('activo').checked = prov.estado_id === 1;
         document.getElementById('modalProveedor').classList.remove('hidden');
       }
     }
@@ -204,11 +197,11 @@
       const id = document.getElementById('proveedorId').value;
       const datos = {
         nombre: document.getElementById('nombre').value.trim(),
-        nombre_contacto: document.getElementById('nombre_contacto').value.trim() || null,
+        contacto: document.getElementById('nombre_contacto').value.trim() || null,
         telefono: document.getElementById('telefono').value.trim() || null,
         email: document.getElementById('email').value.trim() || null,
         direccion: document.getElementById('direccion').value.trim() || null,
-        activo: document.getElementById('activo').checked
+        estado_id: document.getElementById('activo').checked ? 1 : 2
       };
 
       const response = id 
@@ -222,8 +215,9 @@
       }
     }
 
-    async function toggleEstado(id, estado) {
-      const response = await apiPut(`${ENDPOINTS.proveedores.update}/${id}`, { activo: !estado });
+    async function toggleEstado(id, estadoActual) {
+      const nuevoEstado = estadoActual ? 2 : 1; // 1=activo, 2=inactivo
+      const response = await apiPut(`${ENDPOINTS.proveedores.update}/${id}`, { estado_id: nuevoEstado });
       if (response.success) {
         mostrarToast('Estado actualizado', 'success');
         cargar();
