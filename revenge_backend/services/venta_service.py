@@ -55,10 +55,10 @@ class VentaService:
         items_validados = []
         
         for item in items:
-            producto_id = item['producto_id']
-            cantidad = item['cantidad']
-            precio_unitario = item.get('precio_unitario')
-            descuento_unitario = item.get('descuento_unitario', 0)
+            producto_id = int(item['producto_id'])
+            cantidad = int(item['cantidad'])
+            precio_unitario = float(item.get('precio_unitario')) if item.get('precio_unitario') is not None else None
+            descuento_unitario = float(item.get('descuento_unitario', 0))
             
             # Obtener producto
             producto = ProductoModel.obtener_por_id(producto_id)
@@ -66,9 +66,10 @@ class VentaService:
                 raise ValueError(f"Producto ID {producto_id} no encontrado")
             
             # Verificar stock
-            if producto['stock'] < cantidad:
+            stock_actual = int(producto['stock']) if isinstance(producto['stock'], str) else producto['stock']
+            if stock_actual < cantidad:
                 raise ValueError(f"Stock insuficiente para {producto['nombre']}. " +
-                               f"Disponible: {producto['stock']}, Requerido: {cantidad}")
+                               f"Disponible: {stock_actual}, Requerido: {cantidad}")
             
             # Usar precio de venta del producto si no se especifica
             if precio_unitario is None:
@@ -177,7 +178,7 @@ class VentaService:
             }
             
         except Exception as e:
-            print(f"Error creando venta: {e}")
+
             raise
     
     @staticmethod

@@ -26,7 +26,7 @@ class VentaModel:
             venta_id = Database.execute_query(query, params, commit=True)
             return venta_id
         except Exception as e:
-            print(f"Error creando venta: {e}")
+
             raise
     
     @staticmethod

@@ -101,13 +101,10 @@ def register_error_handlers(app):
     @app.errorhandler(Exception)
     def handle_generic_error(error):
         """Maneja errores no capturados"""
-        import traceback
-        print(f"Error no manejado: {error}")
-        print(traceback.format_exc())  # Imprimir traceback completo
         response = jsonify({
             'error': True,
             'message': 'Ha ocurrido un error interno',
-            'details': str(error),  # Agregar detalles del error
+            'details': str(error),
             'status_code': 500
         })
         response.status_code = 500

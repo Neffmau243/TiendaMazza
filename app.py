@@ -1,6 +1,10 @@
 """
 Revenge Backend - Sistema de Gestión de Tienda
 Aplicación principal Flask con arquitectura modular
+
+CONFIGURACIÓN DE FRONTEND:
+- Desarrollo: Frontend Vue corre en puerto 5173 (npm run dev)
+- Producción: Flask sirve el build de Vue desde /revenge-pos-vue/dist
 """
 
 import sys
@@ -9,7 +13,7 @@ import os
 # Agregar revenge_backend al path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'revenge_backend'))
 
-from flask import Flask, jsonify, send_from_directory, redirect
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
 
@@ -29,29 +33,62 @@ from revenge_backend.routes.reporte_routes import reporte_bp
 # Importar manejador de errores desde revenge_backend
 from revenge_backend.utils.error_handler import register_error_handlers
 
-def create_app():
-    """Factory pattern para crear la aplicación Flask"""
-    # Configurar Flask para servir el frontend
-    frontend_folder = os.path.join(os.path.dirname(__file__), 'revenge_frontend')
-    app = Flask(__name__, 
-                static_folder=frontend_folder,
-                static_url_path='')
+def create_app(serve_frontend=False):
+    """
+    Factory pattern para crear la aplicación Flask
+    
+    Args:
+        serve_frontend (bool): Si True, sirve el frontend Vue desde Flask (producción)
+                              Si False, solo API (desarrollo con Vue en puerto 5173)
+    """
+    
+    # Determinar carpeta del frontend
+    if serve_frontend:
+        # Producción: Servir build de Vue
+        frontend_folder = os.path.join(os.path.dirname(__file__), 'revenge-pos-vue', 'dist')
+        if not os.path.exists(frontend_folder):
+            print("⚠️  WARNING: Frontend build no encontrado en revenge-pos-vue/dist")
+            print("   Ejecuta 'npm run build' en revenge-pos-vue/")
+            frontend_folder = None
+    else:
+        frontend_folder = None
+    
+    # Crear app Flask
+    if frontend_folder:
+        app = Flask(__name__, 
+                    static_folder=frontend_folder,
+                    static_url_path='')
+    else:
+        app = Flask(__name__)
     
     # Configuración
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
     app.config['JSON_AS_ASCII'] = False  # Para caracteres especiales
     app.config['JSON_SORT_KEYS'] = False
     
+    # Deshabilitar redirección automática de trailing slashes
+    app.url_map.strict_slashes = False
+    
     # Habilitar CORS
+    # En desarrollo, permitir requests desde Vue (puerto 5173 o 3000)
+    # En producción, más restrictivo
+    cors_origins = [
+        "http://localhost:5173", 
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+    ] if not serve_frontend else "*"
+    
     CORS(app, resources={
         r"/api/*": {
-            "origins": "*",
-            "methods": ["GET", "POST", "PUT", "DELETE", "PATCH"],
-            "allow_headers": ["Content-Type", "Authorization"]
+            "origins": cors_origins,
+            "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": True
         }
     })
     
-    # Registrar blueprints (rutas)
+    # Registrar blueprints (rutas API)
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(producto_bp, url_prefix='/api/productos')
     app.register_blueprint(categoria_bp, url_prefix='/api/categorias')
@@ -64,43 +101,46 @@ def create_app():
     # Registrar manejadores de errores
     register_error_handlers(app)
     
-    # ==================== RUTAS DEL FRONTEND ====================
+    # ==================== RUTAS DEL FRONTEND (Solo en producción) ====================
     
-    # Ruta principal - Servir index.html (página de login)
-    @app.route('/')
-    def index():
-        return send_from_directory(app.static_folder, 'index.html')
-    
-    # Servir todas las páginas HTML
-    @app.route('/<path:filename>')
-    def serve_frontend(filename):
-        # Si es una página HTML, servirla
-        if filename.endswith('.html'):
-            return send_from_directory(app.static_folder, filename)
+    if serve_frontend and frontend_folder:
+        @app.route('/')
+        def index():
+            """Servir index.html de Vue"""
+            return send_from_directory(app.static_folder, 'index.html')
         
-        # Si es un archivo estático (css, js, etc.)
-        if '.' in filename:
-            # Determinar la subcarpeta (css, js, assets)
-            if filename.startswith('css/') or filename.startswith('js/') or filename.startswith('assets/'):
-                return send_from_directory(app.static_folder, filename)
-            # Si no tiene subcarpeta, buscar en la raíz
-            return send_from_directory(app.static_folder, filename)
-        
-        # Si no tiene extensión, redirigir al login
-        return redirect('/')
+        @app.route('/<path:path>')
+        def serve_vue(path):
+            """
+            Servir archivos estáticos de Vue o index.html para rutas SPA
+            """
+            # Si el archivo existe, servirlo
+            file_path = os.path.join(app.static_folder, path)
+            if os.path.exists(file_path) and os.path.isfile(file_path):
+                return send_from_directory(app.static_folder, path)
+            
+            # Si no existe, servir index.html (para Vue Router)
+            return send_from_directory(app.static_folder, 'index.html')
     
-    # API Health check
+    # ==================== RUTAS DE INFORMACIÓN ====================
+    
     @app.route('/health')
     def health():
-        return jsonify({'status': 'healthy'}), 200
+        """Health check endpoint"""
+        return jsonify({
+            'status': 'healthy',
+            'mode': 'production' if serve_frontend else 'development'
+        }), 200
     
-    # API Info (solo para verificar que la API está funcionando)
     @app.route('/api')
     def api_info():
+        """Información de la API"""
         return jsonify({
-            'message': '🚀 Revenge Backend API',
-            'version': '1.0.0',
+            'message': '🚀 Revenge POS - Backend API',
+            'version': '2.0.0',
             'status': 'active',
+            'mode': 'production' if serve_frontend else 'development',
+            'frontend': 'Vue.js 3 + Vite',
             'endpoints': {
                 'auth': '/api/auth',
                 'productos': '/api/productos',
@@ -110,6 +150,10 @@ def create_app():
                 'usuarios': '/api/usuarios',
                 'proveedores': '/api/proveedores',
                 'reportes': '/api/reportes'
+            },
+            'docs': {
+                'development': 'Frontend en http://localhost:5173',
+                'production': 'Frontend servido desde Flask'
             }
         })
     
@@ -117,20 +161,34 @@ def create_app():
 
 
 if __name__ == '__main__':
-    app = create_app()
-    port = int(os.getenv('PORT', 5000))
-    debug = os.getenv('FLASK_DEBUG', 'True') == 'True'
+    # Determinar modo de ejecución
+    # Para desarrollo: python app.py (solo API)
+    # Para producción: python app.py --production (API + Frontend)
     
-    print(f"\n{'='*60}")
-    print(f"⚡ Revenge POS - Sistema Completo")
-    print(f"{'='*60}")
-    print(f"🌐 Frontend:  http://127.0.0.1:{port}")
-    print(f"🔧 API:       http://127.0.0.1:{port}/api")
-    print(f"� Health:    http://127.0.0.1:{port}/health")
-    print(f"{'='*60}")
-    print(f"📂 Sirviendo: revenge_frontend/")
-    print(f"🔑 Login:     admin@revenge.com / 123456")
-    print(f"� Debug:     {debug}")
-    print(f"{'='*60}\n")
+    import sys
+    serve_frontend = '--production' in sys.argv or '--prod' in sys.argv
+    
+    app = create_app(serve_frontend=serve_frontend)
+    port = int(os.getenv('PORT', 5000))
+    debug = os.getenv('FLASK_DEBUG', 'True') == 'True' and not serve_frontend
+    
+    print("\n" + "="*60)
+    print("🚀 REVENGE POS - Backend Server")
+    print("="*60)
+    
+    if serve_frontend:
+        print("📦 Modo: PRODUCCIÓN (API + Frontend Vue)")
+        print(f"🌐 Aplicación completa: http://localhost:{port}")
+        print("⚠️  Asegúrate de haber ejecutado 'npm run build' en revenge-pos-vue/")
+    else:
+        print("🔧 Modo: DESARROLLO (Solo API)")
+        print(f"🔌 API Backend: http://localhost:{port}")
+        print(f"🎨 Frontend Vue: http://localhost:5173")
+        print("\n📝 Para iniciar el frontend:")
+        print("   cd revenge-pos-vue")
+        print("   npm run dev")
+        print("\n💡 Para modo producción: python app.py --production")
+    
+    print("="*60 + "\n")
     
     app.run(host='0.0.0.0', port=port, debug=debug)

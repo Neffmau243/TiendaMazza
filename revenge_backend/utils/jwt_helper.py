@@ -41,7 +41,7 @@ class JWTHelper:
             token = jwt.encode(payload, JWTHelper.SECRET_KEY, algorithm='HS256')
             return token
         except Exception as e:
-            print(f"Error generando token: {e}")
+
             return None
     
     @staticmethod
@@ -59,10 +59,10 @@ class JWTHelper:
             payload = jwt.decode(token, JWTHelper.SECRET_KEY, algorithms=['HS256'])
             return payload
         except jwt.ExpiredSignatureError:
-            print("Token expirado")
+
             return None
         except jwt.InvalidTokenError:
-            print("Token inválido")
+
             return None
     
     @staticmethod

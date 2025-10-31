@@ -28,107 +28,75 @@ class ReporteModel:
         if not fecha_fin:
             fecha_fin = datetime.now().strftime('%Y-%m-%d')
         
-        print(f"📅 Model: Generando reporte desde {fecha_inicio} hasta {fecha_fin}")
+        # Resumen general
+        query_resumen = """
+            SELECT 
+                COUNT(*) as total_ventas,
+                COALESCE(SUM(total), 0) as monto_total,
+                COALESCE(AVG(total), 0) as promedio_venta,
+                COALESCE(MIN(total), 0) as venta_minima,
+                COALESCE(MAX(total), 0) as venta_maxima
+            FROM ventas
+            WHERE DATE(fecha) BETWEEN %s AND %s
+        """
+        resumen = Database.execute_query(query_resumen, (fecha_inicio, fecha_fin), fetch_one=True)
         
-        try:
-            # Resumen general
-            print("📊 Ejecutando query: Resumen general...")
-            query_resumen = """
-                SELECT 
-                    COUNT(*) as total_ventas,
-                    COALESCE(SUM(total), 0) as monto_total,
-                    COALESCE(AVG(total), 0) as promedio_venta,
-                    COALESCE(MIN(total), 0) as venta_minima,
-                    COALESCE(MAX(total), 0) as venta_maxima
-                FROM ventas
-                WHERE DATE(fecha) BETWEEN %s AND %s
-            """
-            resumen = Database.execute_query(query_resumen, (fecha_inicio, fecha_fin), fetch_one=True)
-            print(f"✅ Resumen obtenido: {resumen}")
-        except Exception as e:
-            print(f"❌ Error en query resumen: {str(e)}")
-            raise
+        # Ventas por día
+        query_por_dia = """
+            SELECT 
+                DATE(fecha) as fecha,
+                COUNT(*) as cantidad,
+                COALESCE(SUM(total), 0) as total
+            FROM ventas
+            WHERE DATE(fecha) BETWEEN %s AND %s
+            GROUP BY DATE(fecha)
+            ORDER BY fecha
+        """
+        ventas_por_dia = Database.execute_query(query_por_dia, (fecha_inicio, fecha_fin))
         
-        try:
-            # Ventas por día
-            print("📊 Ejecutando query: Ventas por día...")
-            query_por_dia = """
-                SELECT 
-                    DATE(fecha) as fecha,
-                    COUNT(*) as cantidad,
-                    COALESCE(SUM(total), 0) as total
-                FROM ventas
-                WHERE DATE(fecha) BETWEEN %s AND %s
-                GROUP BY DATE(fecha)
-                ORDER BY fecha
-            """
-            ventas_por_dia = Database.execute_query(query_por_dia, (fecha_inicio, fecha_fin))
-            print(f"✅ Ventas por día: {len(ventas_por_dia)} registros")
-        except Exception as e:
-            print(f"❌ Error en query ventas por día: {str(e)}")
-            raise
+        # Productos más vendidos
+        query_productos = """
+            SELECT 
+                p.nombre as producto,
+                SUM(dv.cantidad) as cantidad_vendida,
+                COALESCE(SUM(dv.subtotal), 0) as total_vendido
+            FROM detalle_venta dv
+            INNER JOIN productos p ON dv.producto_id = p.id
+            INNER JOIN ventas v ON dv.venta_id = v.id
+            WHERE DATE(v.fecha) BETWEEN %s AND %s
+            GROUP BY p.id, p.nombre
+            ORDER BY cantidad_vendida DESC
+            LIMIT 10
+        """
+        productos_mas_vendidos = Database.execute_query(query_productos, (fecha_inicio, fecha_fin))
         
-        try:
-            # Productos más vendidos
-            print("📊 Ejecutando query: Productos más vendidos...")
-            query_productos = """
-                SELECT 
-                    p.nombre as producto,
-                    SUM(dv.cantidad) as cantidad_vendida,
-                    COALESCE(SUM(dv.subtotal), 0) as total_vendido
-                FROM detalle_venta dv
-                INNER JOIN productos p ON dv.producto_id = p.id
-                INNER JOIN ventas v ON dv.venta_id = v.id
-                WHERE DATE(v.fecha) BETWEEN %s AND %s
-                GROUP BY p.id, p.nombre
-                ORDER BY cantidad_vendida DESC
-                LIMIT 10
-            """
-            productos_mas_vendidos = Database.execute_query(query_productos, (fecha_inicio, fecha_fin))
-            print(f"✅ Productos más vendidos: {len(productos_mas_vendidos)} registros")
-        except Exception as e:
-            print(f"❌ Error en query productos más vendidos: {str(e)}")
-            raise
+        # Ventas por método de pago
+        query_metodos = """
+            SELECT 
+                mp.nombre as metodo_pago,
+                COUNT(*) as cantidad,
+                COALESCE(SUM(v.total), 0) as total
+            FROM ventas v
+            INNER JOIN metodos_pago mp ON v.metodo_pago_id = mp.id
+            WHERE DATE(v.fecha) BETWEEN %s AND %s
+            GROUP BY mp.id, mp.nombre
+            ORDER BY total DESC
+        """
+        ventas_por_metodo = Database.execute_query(query_metodos, (fecha_inicio, fecha_fin))
         
-        try:
-            # Ventas por método de pago
-            print("📊 Ejecutando query: Ventas por método de pago...")
-            query_metodos = """
-                SELECT 
-                    mp.nombre as metodo_pago,
-                    COUNT(*) as cantidad,
-                    COALESCE(SUM(v.total), 0) as total
-                FROM ventas v
-                INNER JOIN metodos_pago mp ON v.metodo_pago_id = mp.id
-                WHERE DATE(v.fecha) BETWEEN %s AND %s
-                GROUP BY mp.id, mp.nombre
-                ORDER BY total DESC
-            """
-            ventas_por_metodo = Database.execute_query(query_metodos, (fecha_inicio, fecha_fin))
-            print(f"✅ Ventas por método: {len(ventas_por_metodo)} registros")
-        except Exception as e:
-            print(f"❌ Error en query ventas por método: {str(e)}")
-            raise
-        
-        try:
-            # Ventas por cajero
-            print("📊 Ejecutando query: Ventas por cajero...")
-            query_cajeros = """
-                SELECT 
-                    u.nombre as cajero,
-                    COUNT(*) as cantidad_ventas,
-                    COALESCE(SUM(v.total), 0) as total_vendido
-                FROM ventas v
-                INNER JOIN usuarios u ON v.cajero_id = u.id
-                WHERE DATE(v.fecha) BETWEEN %s AND %s
-                GROUP BY u.id, u.nombre
-                ORDER BY total_vendido DESC
-            """
-            ventas_por_cajero = Database.execute_query(query_cajeros, (fecha_inicio, fecha_fin))
-            print(f"✅ Ventas por cajero: {len(ventas_por_cajero)} registros")
-        except Exception as e:
-            print(f"❌ Error en query ventas por cajero: {str(e)}")
-            raise
+        # Ventas por cajero
+        query_cajeros = """
+            SELECT 
+                u.nombre as cajero,
+                COUNT(*) as cantidad_ventas,
+                COALESCE(SUM(v.total), 0) as total_vendido
+            FROM ventas v
+            INNER JOIN usuarios u ON v.cajero_id = u.id
+            WHERE DATE(v.fecha) BETWEEN %s AND %s
+            GROUP BY u.id, u.nombre
+            ORDER BY total_vendido DESC
+        """
+        ventas_por_cajero = Database.execute_query(query_cajeros, (fecha_inicio, fecha_fin))
         
         return {
             'fecha_inicio': fecha_inicio,

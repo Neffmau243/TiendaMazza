@@ -3,9 +3,11 @@ Controlador de Reportes
 Maneja las peticiones HTTP para reportes
 """
 
-from flask import request, jsonify
+from flask import request, jsonify, send_file
 from services.reporte_service import ReporteService
 from utils.error_handler import BadRequestError
+from utils.pdf_generator import PDFGenerator
+from datetime import datetime
 
 
 class ReporteController:
@@ -73,3 +75,121 @@ class ReporteController:
             raise e
         except Exception as e:
             raise BadRequestError(f"Error al generar reporte de compras: {str(e)}")
+    
+    # ==================== ENDPOINTS PDF ====================
+    
+    @staticmethod
+    def reporte_ventas_pdf():
+        """GET - Genera PDF de reporte de ventas"""
+        try:
+            fecha_inicio = request.args.get('fecha_inicio') or request.args.get('fecha_desde')
+            fecha_fin = request.args.get('fecha_fin') or request.args.get('fecha_hasta')
+            
+            print(f"📄 Generando PDF de ventas: {fecha_inicio} a {fecha_fin}")
+            
+            # Obtener datos del reporte
+            resultado = ReporteService.generar_reporte_ventas(fecha_inicio, fecha_fin)
+            
+            if not resultado['success']:
+                raise BadRequestError(resultado.get('error', 'Error al generar reporte'))
+            
+            # Generar PDF
+            pdf_buffer = PDFGenerator.generar_reporte_ventas(
+                resultado['data'], 
+                fecha_inicio, 
+                fecha_fin
+            )
+            
+            # Nombre del archivo
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"reporte_ventas_{timestamp}.pdf"
+            
+            return send_file(
+                pdf_buffer,
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name=filename
+            )
+            
+        except ImportError as e:
+            raise BadRequestError("reportlab no está instalado. Ejecuta: pip install reportlab")
+        except Exception as e:
+            print(f"❌ Error generando PDF: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            raise BadRequestError(f"Error al generar PDF: {str(e)}")
+    
+    @staticmethod
+    def reporte_compras_pdf():
+        """GET - Genera PDF de reporte de compras"""
+        try:
+            fecha_inicio = request.args.get('fecha_inicio') or request.args.get('fecha_desde')
+            fecha_fin = request.args.get('fecha_fin') or request.args.get('fecha_hasta')
+            
+            print(f"📄 Generando PDF de compras: {fecha_inicio} a {fecha_fin}")
+            
+            # Obtener datos del reporte
+            resultado = ReporteService.generar_reporte_compras(fecha_inicio, fecha_fin)
+            
+            if not resultado['success']:
+                raise BadRequestError(resultado.get('error', 'Error al generar reporte'))
+            
+            # Generar PDF
+            pdf_buffer = PDFGenerator.generar_reporte_compras(
+                resultado['data'], 
+                fecha_inicio, 
+                fecha_fin
+            )
+            
+            # Nombre del archivo
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"reporte_compras_{timestamp}.pdf"
+            
+            return send_file(
+                pdf_buffer,
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name=filename
+            )
+            
+        except ImportError as e:
+            raise BadRequestError("reportlab no está instalado. Ejecuta: pip install reportlab")
+        except Exception as e:
+            print(f"❌ Error generando PDF: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            raise BadRequestError(f"Error al generar PDF: {str(e)}")
+    
+    @staticmethod
+    def reporte_inventario_pdf():
+        """GET - Genera PDF de reporte de inventario"""
+        try:
+            print(f"📄 Generando PDF de inventario")
+            
+            # Obtener datos del reporte
+            resultado = ReporteService.generar_reporte_inventario()
+            
+            if not resultado['success']:
+                raise BadRequestError(resultado.get('error', 'Error al generar reporte'))
+            
+            # Generar PDF
+            pdf_buffer = PDFGenerator.generar_reporte_inventario(resultado['data'])
+            
+            # Nombre del archivo
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"reporte_inventario_{timestamp}.pdf"
+            
+            return send_file(
+                pdf_buffer,
+                mimetype='application/pdf',
+                as_attachment=True,
+                download_name=filename
+            )
+            
+        except ImportError as e:
+            raise BadRequestError("reportlab no está instalado. Ejecuta: pip install reportlab")
+        except Exception as e:
+            print(f"❌ Error generando PDF: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            raise BadRequestError(f"Error al generar PDF: {str(e)}")

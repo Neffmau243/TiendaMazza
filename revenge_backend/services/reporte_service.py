@@ -22,17 +22,12 @@ class ReporteService:
             dict: Datos del reporte
         """
         try:
-            print(f"📊 Service: Llamando a ReporteModel.reporte_ventas({fecha_inicio}, {fecha_fin})")
             datos = ReporteModel.reporte_ventas(fecha_inicio, fecha_fin)
-            print(f"✅ Service: Reporte generado exitosamente")
             return {
                 'success': True,
                 'data': datos
             }
         except Exception as e:
-            print(f"❌ Service Error: {str(e)}")
-            import traceback
-            traceback.print_exc()
             return {
                 'success': False,
                 'error': str(e)

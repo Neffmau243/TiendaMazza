@@ -26,7 +26,7 @@ class UsuarioModel:
             usuario_id = Database.execute_query(query, params, commit=True)
             return usuario_id
         except Exception as e:
-            print(f"Error creando usuario: {e}")
+
             raise
     
     @staticmethod
@@ -110,7 +110,7 @@ class UsuarioModel:
             
             return filas_afectadas > 0
         except Exception as e:
-            print(f"Error actualizando usuario: {e}")
+
             raise
     
     @staticmethod
@@ -127,7 +127,7 @@ class UsuarioModel:
             
             return filas_afectadas > 0
         except Exception as e:
-            print(f"Error eliminando usuario: {e}")
+
             raise
     
     @staticmethod

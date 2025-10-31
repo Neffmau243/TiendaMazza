@@ -153,7 +153,7 @@ class CompraService:
             }
             
         except Exception as e:
-            print(f"Error creando compra: {e}")
+
             raise
     
     @staticmethod

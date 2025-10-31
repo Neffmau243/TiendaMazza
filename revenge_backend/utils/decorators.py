@@ -49,18 +49,14 @@ def validar_campos_requeridos(*campos):
                 raise UnauthorizedError("El contenido debe ser JSON")
             
             data = request.get_json()
-            print(f"🔍 Validando campos: {campos}")
-            print(f"🔍 Datos recibidos: {data}")
             campos_faltantes = []
             
             for campo in campos:
                 valor = data.get(campo)
-                print(f"  - Campo '{campo}': {valor} (tipo: {type(valor).__name__})")
                 if campo not in data or data[campo] is None or data[campo] == '':
                     campos_faltantes.append(campo)
             
             if campos_faltantes:
-                print(f"❌ Campos faltantes: {campos_faltantes}")
                 raise UnauthorizedError(
                     f"Campos requeridos faltantes: {', '.join(campos_faltantes)}"
                 )
