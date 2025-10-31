@@ -16,9 +16,9 @@ export const reportesService = {
       })
       return { success: true, data: response.data.data || response.data }
     } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Error al obtener reporte de ventas' 
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al obtener reporte de ventas'
       }
     }
   },
@@ -32,9 +32,9 @@ export const reportesService = {
       const response = await api.get('/reportes/inventario')
       return { success: true, data: response.data.data || response.data }
     } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Error al obtener reporte de inventario' 
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al obtener reporte de inventario'
       }
     }
   },
@@ -53,9 +53,9 @@ export const reportesService = {
       })
       return { success: true, data: response.data.data || response.data }
     } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Error al obtener reporte de compras' 
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al obtener reporte de compras'
       }
     }
   },
@@ -73,7 +73,7 @@ export const reportesService = {
         },
         responseType: 'blob'
       })
-      
+
       // Crear URL del blob y descargar
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
@@ -83,12 +83,12 @@ export const reportesService = {
       link.click()
       link.remove()
       window.URL.revokeObjectURL(url)
-      
+
       return { success: true }
     } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Error al descargar PDF de ventas' 
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al descargar PDF de ventas'
       }
     }
   },
@@ -106,7 +106,7 @@ export const reportesService = {
         },
         responseType: 'blob'
       })
-      
+
       // Crear URL del blob y descargar
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
@@ -116,12 +116,12 @@ export const reportesService = {
       link.click()
       link.remove()
       window.URL.revokeObjectURL(url)
-      
+
       return { success: true }
     } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Error al descargar PDF de compras' 
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al descargar PDF de compras'
       }
     }
   },
@@ -135,7 +135,7 @@ export const reportesService = {
       const response = await api.get('/reportes/inventario/pdf', {
         responseType: 'blob'
       })
-      
+
       // Crear URL del blob y descargar
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
@@ -145,13 +145,109 @@ export const reportesService = {
       link.click()
       link.remove()
       window.URL.revokeObjectURL(url)
-      
+
       return { success: true }
     } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Error al descargar PDF de inventario' 
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al descargar PDF de inventario'
+      }
+    }
+  },
+
+  /**
+   * Descargar Excel de reporte de ventas
+   * GET /api/reportes/ventas/excel?fecha_desde=YYYY-MM-DD&fecha_hasta=YYYY-MM-DD
+   */
+  async descargarVentasExcel(fechaDesde, fechaHasta) {
+    try {
+      const response = await api.get('/reportes/ventas/excel', {
+        params: {
+          fecha_desde: fechaDesde,
+          fecha_hasta: fechaHasta
+        },
+        responseType: 'blob'
+      })
+
+      // Crear URL del blob y descargar
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `reporte_ventas_${new Date().getTime()}.xlsx`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+
+      return { success: true }
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al descargar Excel de ventas'
+      }
+    }
+  },
+
+  /**
+   * Descargar Excel de reporte de compras
+   * GET /api/reportes/compras/excel?fecha_desde=YYYY-MM-DD&fecha_hasta=YYYY-MM-DD
+   */
+  async descargarComprasExcel(fechaDesde, fechaHasta) {
+    try {
+      const response = await api.get('/reportes/compras/excel', {
+        params: {
+          fecha_desde: fechaDesde,
+          fecha_hasta: fechaHasta
+        },
+        responseType: 'blob'
+      })
+
+      // Crear URL del blob y descargar
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `reporte_compras_${new Date().getTime()}.xlsx`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+
+      return { success: true }
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al descargar Excel de compras'
+      }
+    }
+  },
+
+  /**
+   * Descargar Excel de reporte de inventario
+   * GET /api/reportes/inventario/excel
+   */
+  async descargarInventarioExcel() {
+    try {
+      const response = await api.get('/reportes/inventario/excel', {
+        responseType: 'blob'
+      })
+
+      // Crear URL del blob y descargar
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `reporte_inventario_${new Date().getTime()}.xlsx`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+
+      return { success: true }
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Error al descargar Excel de inventario'
       }
     }
   }
+
 }

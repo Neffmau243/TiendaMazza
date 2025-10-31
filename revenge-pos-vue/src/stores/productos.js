@@ -26,17 +26,7 @@ export const useProductosStore = defineStore('productos', () => {
       const stockMinimo = parseInt(p.stock_minimo)
       return stock <= stockMinimo
     })
-    
-    // Debug temporal
-    console.log('🔍 Productos con stock bajo:', stockBajo.length)
-    if (stockBajo.length > 0) {
-      console.log('📦 Productos:', stockBajo.map(p => ({
-        nombre: p.nombre,
-        stock: p.stock,
-        stock_minimo: p.stock_minimo
-      })))
-    }
-    
+
     return stockBajo
   })
 
@@ -56,7 +46,7 @@ export const useProductosStore = defineStore('productos', () => {
   const fetchProductos = async () => {
     loading.value = true
     error.value = null
-    
+
     try {
       const response = await productosService.getAll()
       if (response.success) {
@@ -74,7 +64,7 @@ export const useProductosStore = defineStore('productos', () => {
   const fetchProducto = async (id) => {
     loading.value = true
     error.value = null
-    
+
     try {
       const response = await productosService.getById(id)
       if (response.success) {
@@ -92,7 +82,7 @@ export const useProductosStore = defineStore('productos', () => {
   const createProducto = async (data) => {
     loading.value = true
     error.value = null
-    
+
     try {
       const response = await productosService.create(data)
       if (response.success) {
@@ -110,7 +100,7 @@ export const useProductosStore = defineStore('productos', () => {
   const updateProducto = async (id, data) => {
     loading.value = true
     error.value = null
-    
+
     try {
       const response = await productosService.update(id, data)
       if (response.success) {
@@ -131,7 +121,7 @@ export const useProductosStore = defineStore('productos', () => {
   const deleteProducto = async (id) => {
     loading.value = true
     error.value = null
-    
+
     try {
       const response = await productosService.delete(id)
       if (response.success) {

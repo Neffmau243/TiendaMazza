@@ -58,7 +58,6 @@ class ProductoController:
         """POST /api/productos"""
         try:
             data = request.get_json()
-            print(f"📦 Datos recibidos para crear producto: {data}")
             
             producto_id = ProductoService.crear_producto(
                 codigo_barras=data['codigo_barras'],

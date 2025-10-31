@@ -2,8 +2,9 @@
 <template>
   <div class="productos">
     <div class="page-header">
-      <h1>Gestión de Productos</h1>
+      <h1>{{ canEdit ? 'Gestión de Productos' : 'Consulta de Productos' }}</h1>
       <BaseButton
+        v-if="canEdit"
         @click="openModal('create')"
         variant="primary"
         icon="fa-plus"
@@ -41,7 +42,7 @@
           </span>
         </template>
         <template #actions="{ row }">
-          <div class="action-buttons">
+          <div class="action-buttons" v-if="canEdit">
             <button 
               @click="openModal('edit', row)"
               class="btn-icon btn-edit"
@@ -57,6 +58,7 @@
               <i class="fas fa-trash"></i>
             </button>
           </div>
+          <span v-else class="text-muted">Solo lectura</span>
         </template>
       </BaseTable>
     </BaseCard>
@@ -170,6 +172,12 @@ const toast = useToast()
 const searchTerm = ref('')
 const saving = ref(false)
 const categorias = ref([])
+
+// Verificar si el usuario puede editar (Admin o Almacenero)
+const canEdit = computed(() => {
+  const rolId = authStore.user?.rol_id
+  return rolId === 1 || rolId === 3 // 1: Admin, 3: Almacenero
+})
 
 const columns = [
   { key: 'codigo_barras', label: 'Código' },

@@ -209,7 +209,7 @@
         <BaseCard>
           <div class="reporte-header">
             <h2><i class="fas fa-trophy"></i> Productos Más Vendidos</h2>
-            <p class="description">Ranking de productos con mayor rotación</p>
+            <p class="description">Top 10 productos con mayor rotación</p>
           </div>
           
           <div class="reporte-filters">
@@ -223,26 +223,59 @@
               type="date"
               label="Fecha Fin"
             />
-            <div class="filter-actions">
-              <BaseButton
-                @click="exportarProductosPDF"
-                variant="danger"
-                icon="fa-file-pdf"
-              >
-                Exportar PDF
-              </BaseButton>
-              <BaseButton
-                @click="exportarProductosExcel"
-                variant="success"
-                icon="fa-file-excel"
-              >
-                Exportar Excel
-              </BaseButton>
-            </div>
+            <BaseButton
+              @click="cargarProductosMasVendidos"
+              variant="primary"
+              icon="fa-search"
+            >
+              Consultar
+            </BaseButton>
           </div>
 
-          <div v-if="reporteProductos" class="reporte-content">
-            <p class="info-text">Top 10 productos más vendidos en el período seleccionado</p>
+          <div v-if="reporteProductos && reporteProductos.length > 0" class="reporte-content">
+            <div class="productos-ranking">
+              <div 
+                v-for="(producto, index) in reporteProductos" 
+                :key="index"
+                class="producto-item"
+                :class="{ 'top-1': index === 0, 'top-2': index === 1, 'top-3': index === 2 }"
+              >
+                <div class="ranking-badge">
+                  <i v-if="index === 0" class="fas fa-trophy" style="color: #FFD700;"></i>
+                  <i v-else-if="index === 1" class="fas fa-medal" style="color: #C0C0C0;"></i>
+                  <i v-else-if="index === 2" class="fas fa-medal" style="color: #CD7F32;"></i>
+                  <span v-else class="ranking-number">{{ index + 1 }}</span>
+                </div>
+                <div class="producto-info">
+                  <h4>{{ producto.producto }}</h4>
+                  <p class="producto-categoria">{{ producto.categoria }}</p>
+                </div>
+                <div class="producto-stats">
+                  <div class="stat">
+                    <span class="stat-label">Cantidad Vendida</span>
+                    <span class="stat-value">{{ producto.cantidad }}</span>
+                  </div>
+                  <div class="stat">
+                    <span class="stat-label">Total Ventas</span>
+                    <span class="stat-value">{{ formatCurrency(producto.total) }}</span>
+                  </div>
+                  <div class="stat">
+                    <span class="stat-label">Participación</span>
+                    <span class="stat-value">{{ producto.porcentaje }}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div v-else-if="reporteProductos && reporteProductos.length === 0" class="empty-state">
+            <i class="fas fa-box-open"></i>
+            <p>No hay productos vendidos en el período seleccionado</p>
+          </div>
+          
+          <div v-else class="empty-state">
+            <i class="fas fa-search"></i>
+            <p>Selecciona un rango de fechas y haz clic en "Consultar"</p>
           </div>
         </BaseCard>
       </div>
@@ -290,7 +323,7 @@ const productosFilters = ref({
 const reporteVentas = ref(null)
 const reporteCompras = ref(null)
 const reporteInventario = ref(null)
-const reporteProductos = ref(null)
+const reporteProductos = ref([])
 const loading = ref(false)
 
 // Generar Reportes
@@ -324,6 +357,37 @@ const generarReporteCompras = () => {
   }
   
   toast.success('Reporte de compras generado')
+}
+
+const cargarProductosMasVendidos = async () => {
+  if (!productosFilters.value.fecha_inicio || !productosFilters.value.fecha_fin) {
+    toast.error('Seleccione el rango de fechas')
+    return
+  }
+  
+  loading.value = true
+  
+  try {
+    const resultado = await reportesService.getReporteVentas(
+      productosFilters.value.fecha_inicio,
+      productosFilters.value.fecha_fin
+    )
+    
+    if (resultado.success) {
+      reporteProductos.value = resultado.data.productos_mas_vendidos || []
+      if (reporteProductos.value.length === 0) {
+        toast.info('No hay productos vendidos en el período seleccionado')
+      }
+    } else {
+      toast.error(resultado.message || 'Error al cargar productos')
+      reporteProductos.value = []
+    }
+  } catch (error) {
+    toast.error('Error al cargar productos más vendidos')
+    reporteProductos.value = []
+  } finally {
+    loading.value = false
+  }
 }
 
 const generarReporteInventario = () => {
@@ -424,25 +488,78 @@ const exportarInventarioPDF = async () => {
   }
 }
 
-const exportarProductosPDF = () => {
-  toast.info('Función de productos más vendidos en desarrollo...')
-}
-
 // Exportar Excel
-const exportarVentasExcel = () => {
-  toast.info('Exportando reporte de ventas a Excel...')
+const exportarVentasExcel = async () => {
+  if (!ventasFilters.value.fecha_inicio || !ventasFilters.value.fecha_fin) {
+    toast.error('Seleccione el rango de fechas')
+    return
+  }
+  
+  loading.value = true
+  toast.info('Generando Excel de ventas...')
+  
+  try {
+    const resultado = await reportesService.descargarVentasExcel(
+      ventasFilters.value.fecha_inicio,
+      ventasFilters.value.fecha_fin
+    )
+    
+    if (resultado.success) {
+      toast.success('Excel de ventas descargado correctamente')
+    } else {
+      toast.error(resultado.message || 'Error al descargar Excel')
+    }
+  } catch (error) {
+    toast.error('Error al generar Excel de ventas')
+  } finally {
+    loading.value = false
+  }
 }
 
-const exportarComprasExcel = () => {
-  toast.info('Exportando reporte de compras a Excel...')
+const exportarComprasExcel = async () => {
+  if (!comprasFilters.value.fecha_inicio || !comprasFilters.value.fecha_fin) {
+    toast.error('Seleccione el rango de fechas')
+    return
+  }
+  
+  loading.value = true
+  toast.info('Generando Excel de compras...')
+  
+  try {
+    const resultado = await reportesService.descargarComprasExcel(
+      comprasFilters.value.fecha_inicio,
+      comprasFilters.value.fecha_fin
+    )
+    
+    if (resultado.success) {
+      toast.success('Excel de compras descargado correctamente')
+    } else {
+      toast.error(resultado.message || 'Error al descargar Excel')
+    }
+  } catch (error) {
+    toast.error('Error al generar Excel de compras')
+  } finally {
+    loading.value = false
+  }
 }
 
-const exportarInventarioExcel = () => {
-  toast.info('Exportando reporte de inventario a Excel...')
-}
-
-const exportarProductosExcel = () => {
-  toast.info('Exportando reporte de productos a Excel...')
+const exportarInventarioExcel = async () => {
+  loading.value = true
+  toast.info('Generando Excel de inventario...')
+  
+  try {
+    const resultado = await reportesService.descargarInventarioExcel()
+    
+    if (resultado.success) {
+      toast.success('Excel de inventario descargado correctamente')
+    } else {
+      toast.error(resultado.message || 'Error al descargar Excel')
+    }
+  } catch (error) {
+    toast.error('Error al generar Excel de inventario')
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => {
@@ -723,6 +840,135 @@ onMounted(() => {
 
   .tab-button i {
     font-size: 1.25rem;
+  }
+}
+
+/* Productos Ranking */
+.productos-ranking {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.producto-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.producto-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.producto-item.top-1 {
+  border-color: #FFD700;
+  background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
+}
+
+.producto-item.top-2 {
+  border-color: #C0C0C0;
+  background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%);
+}
+
+.producto-item.top-3 {
+  border-color: #CD7F32;
+  background: linear-gradient(135deg, #fff4e6 0%, #ffffff 100%);
+}
+
+.ranking-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.ranking-number {
+  font-size: 1.75rem;
+  color: #999;
+}
+
+.producto-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.producto-info h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.125rem;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.producto-categoria {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #7f8c8d;
+}
+
+.producto-stats {
+  display: flex;
+  gap: 2rem;
+  flex-shrink: 0;
+}
+
+.producto-stats .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.producto-stats .stat-label {
+  font-size: 0.75rem;
+  color: #7f8c8d;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.producto-stats .stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #7f8c8d;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .producto-item {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .producto-stats {
+    width: 100%;
+    justify-content: space-around;
   }
 }
 </style>

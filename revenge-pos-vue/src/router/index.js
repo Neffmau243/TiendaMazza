@@ -58,7 +58,7 @@ const routes = [
     component: ProductosView,
     meta: { 
       requiresAuth: true,
-      roles: [1, 3],
+      roles: [1, 2, 3],
       title: 'Productos',
       icon: 'fa-box'
     }

@@ -54,21 +54,28 @@ class ReporteModel:
         """
         ventas_por_dia = Database.execute_query(query_por_dia, (fecha_inicio, fecha_fin))
         
-        # Productos más vendidos
+        # Productos más vendidos (con más detalles)
         query_productos = """
             SELECT 
+                p.codigo_barras,
                 p.nombre as producto,
+                c.nombre as categoria,
                 SUM(dv.cantidad) as cantidad_vendida,
+                dv.precio_unitario,
                 COALESCE(SUM(dv.subtotal), 0) as total_vendido
             FROM detalle_venta dv
             INNER JOIN productos p ON dv.producto_id = p.id
+            INNER JOIN categorias c ON p.categoria_id = c.id
             INNER JOIN ventas v ON dv.venta_id = v.id
             WHERE DATE(v.fecha) BETWEEN %s AND %s
-            GROUP BY p.id, p.nombre
+            GROUP BY p.id, p.codigo_barras, p.nombre, c.nombre, dv.precio_unitario
             ORDER BY cantidad_vendida DESC
             LIMIT 10
         """
         productos_mas_vendidos = Database.execute_query(query_productos, (fecha_inicio, fecha_fin))
+        
+        # Calcular total general para porcentajes
+        total_general = float(resumen['monto_total']) if resumen else 0.0
         
         # Ventas por método de pago
         query_metodos = """
@@ -117,23 +124,30 @@ class ReporteModel:
             ],
             'productos_mas_vendidos': [
                 {
+                    'codigo': item['codigo_barras'],
                     'producto': item['producto'],
+                    'categoria': item['categoria'],
                     'cantidad': item['cantidad_vendida'],
-                    'total': float(item['total_vendido'])
+                    'precio_unitario': float(item['precio_unitario']),
+                    'total': float(item['total_vendido']),
+                    'porcentaje': round((float(item['total_vendido']) / total_general * 100), 2) if total_general > 0 else 0
                 } for item in productos_mas_vendidos
             ],
             'ventas_por_metodo_pago': [
                 {
                     'metodo': item['metodo_pago'],
                     'cantidad': item['cantidad'],
-                    'total': float(item['total'])
+                    'total': float(item['total']),
+                    'porcentaje': round((float(item['total']) / total_general * 100), 2) if total_general > 0 else 0
                 } for item in ventas_por_metodo
             ],
             'ventas_por_cajero': [
                 {
                     'cajero': item['cajero'],
                     'cantidad': item['cantidad_ventas'],
-                    'total': float(item['total_vendido'])
+                    'total': float(item['total_vendido']),
+                    'ticket_promedio': round(float(item['total_vendido']) / item['cantidad_ventas'], 2) if item['cantidad_ventas'] > 0 else 0,
+                    'porcentaje': round((float(item['total_vendido']) / total_general * 100), 2) if total_general > 0 else 0
                 } for item in ventas_por_cajero
             ]
         }
@@ -285,21 +299,41 @@ class ReporteModel:
         """
         compras_por_proveedor = Database.execute_query(query_proveedores, (fecha_inicio, fecha_fin))
         
-        # Productos más comprados
+        # Productos más comprados (con más detalles)
         query_productos = """
             SELECT 
+                p.codigo_barras,
                 p.nombre as producto,
+                c.nombre as categoria,
                 SUM(dc.cantidad) as cantidad_comprada,
+                dc.precio_unitario,
                 COALESCE(SUM(dc.subtotal), 0) as total_gastado
             FROM detalle_compra dc
             INNER JOIN productos p ON dc.producto_id = p.id
-            INNER JOIN compras c ON dc.compra_id = c.id
-            WHERE DATE(c.fecha) BETWEEN %s AND %s
-            GROUP BY p.id, p.nombre
+            INNER JOIN categorias c ON p.categoria_id = c.id
+            INNER JOIN compras co ON dc.compra_id = co.id
+            WHERE DATE(co.fecha) BETWEEN %s AND %s
+            GROUP BY p.id, p.codigo_barras, p.nombre, c.nombre, dc.precio_unitario
             ORDER BY cantidad_comprada DESC
             LIMIT 10
         """
         productos_mas_comprados = Database.execute_query(query_productos, (fecha_inicio, fecha_fin))
+        
+        # Compras por día
+        query_por_dia = """
+            SELECT 
+                DATE(fecha) as fecha,
+                COUNT(*) as cantidad,
+                COALESCE(SUM(total), 0) as total
+            FROM compras
+            WHERE DATE(fecha) BETWEEN %s AND %s
+            GROUP BY DATE(fecha)
+            ORDER BY fecha
+        """
+        compras_por_dia = Database.execute_query(query_por_dia, (fecha_inicio, fecha_fin))
+        
+        # Calcular total general para porcentajes
+        total_general = float(resumen['monto_total']) if resumen else 0.0
         
         return {
             'fecha_inicio': fecha_inicio,
@@ -313,14 +347,26 @@ class ReporteModel:
                 {
                     'proveedor': item['proveedor'],
                     'cantidad': item['cantidad_compras'],
-                    'total': float(item['total_comprado'])
+                    'total': float(item['total_comprado']),
+                    'porcentaje': round((float(item['total_comprado']) / total_general * 100), 2) if total_general > 0 else 0
                 } for item in compras_por_proveedor
             ],
             'productos_mas_comprados': [
                 {
+                    'codigo': item['codigo_barras'],
                     'producto': item['producto'],
+                    'categoria': item['categoria'],
                     'cantidad': item['cantidad_comprada'],
-                    'total': float(item['total_gastado'])
+                    'precio_unitario': float(item['precio_unitario']),
+                    'total': float(item['total_gastado']),
+                    'porcentaje': round((float(item['total_gastado']) / total_general * 100), 2) if total_general > 0 else 0
                 } for item in productos_mas_comprados
+            ],
+            'compras_por_dia': [
+                {
+                    'fecha': str(item['fecha']),
+                    'cantidad': item['cantidad'],
+                    'total': float(item['total'])
+                } for item in compras_por_dia
             ]
         }

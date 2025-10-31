@@ -24,3 +24,12 @@ reporte_bp.route('/compras/pdf', methods=['GET'])(ReporteController.reporte_comp
 
 # GET /api/reportes/inventario/pdf - Generar PDF
 reporte_bp.route('/inventario/pdf', methods=['GET'])(ReporteController.reporte_inventario_pdf)
+
+# GET /api/reportes/ventas/excel - Generar Excel
+reporte_bp.route('/ventas/excel', methods=['GET'])(ReporteController.reporte_ventas_excel)
+
+# GET /api/reportes/compras/excel - Generar Excel
+reporte_bp.route('/compras/excel', methods=['GET'])(ReporteController.reporte_compras_excel)
+
+# GET /api/reportes/inventario/excel - Generar Excel
+reporte_bp.route('/inventario/excel', methods=['GET'])(ReporteController.reporte_inventario_excel)
