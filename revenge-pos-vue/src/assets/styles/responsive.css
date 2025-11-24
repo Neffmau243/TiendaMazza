@@ -1,0 +1,339 @@
+/* ============================================
+   RESPONSIVE - Plaza Vea POS
+   ============================================ */
+
+/* ============================================
+   MOBILE FIRST BREAKPOINTS
+   ============================================ */
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) {
+  .container {
+    max-width: 540px;
+  }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (min-width: 768px) {
+  .container {
+    max-width: 720px;
+  }
+}
+
+/* Large devices (desktops, 1024px and up) */
+@media (min-width: 1024px) {
+  .container {
+    max-width: 960px;
+  }
+}
+
+/* Extra large devices (large desktops, 1280px and up) */
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1200px;
+  }
+}
+
+/* ============================================
+   MOBILE STYLES (max-width: 767px)
+   ============================================ */
+
+@media (max-width: 767px) {
+
+  /* Typography */
+  .page-title {
+    font-size: var(--font-size-xl);
+  }
+
+  h1 {
+    font-size: var(--font-size-2xl);
+  }
+
+  h2 {
+    font-size: var(--font-size-xl);
+  }
+
+  h3 {
+    font-size: var(--font-size-lg);
+  }
+
+  /* Spacing */
+  .page-header {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  /* Cards */
+  .card {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .card-header,
+  .card-body,
+  .card-footer {
+    padding: var(--spacing-md);
+  }
+
+  /* Tables - Scroll horizontal */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 calc(var(--spacing-md) * -1);
+    padding: 0 var(--spacing-md);
+  }
+
+  .table {
+    min-width: 600px;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.75rem 0.5rem;
+    font-size: var(--font-size-sm);
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 0.75rem 1.25rem;
+    font-size: var(--font-size-base);
+    min-height: 44px;
+    /* Touch target */
+  }
+
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: var(--font-size-sm);
+    min-height: 36px;
+  }
+
+  .page-header .btn {
+    width: 100%;
+    margin-top: var(--spacing-sm);
+  }
+
+  /* Forms - Touch optimized */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 16px;
+    /* Prevent zoom on iOS */
+    min-height: 44px;
+    padding: 0.75rem;
+  }
+
+  .form-group {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  /* Modals - Fullscreen */
+  .modal-dialog {
+    margin: 0;
+    max-width: 100%;
+    height: 100vh;
+    border-radius: 0;
+  }
+
+  .modal-content {
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .modal-header {
+    padding: var(--spacing-md);
+    border-bottom: 2px solid var(--color-divider);
+  }
+
+  .modal-body {
+    padding: var(--spacing-md);
+    overflow-y: auto;
+  }
+
+  .modal-footer {
+    padding: var(--spacing-md);
+    border-top: 2px solid var(--color-divider);
+    flex-direction: column-reverse;
+    gap: var(--spacing-sm);
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    margin: 0;
+  }
+
+  /* Grid - Single column */
+  .grid,
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+
+  /* Flex - Column on mobile */
+  .flex-row {
+    flex-direction: column;
+  }
+
+  /* Utility: Hide on mobile */
+  .hide-mobile {
+    display: none !important;
+  }
+
+  /* Utility: Full width on mobile */
+  .mobile-full {
+    width: 100%;
+  }
+
+  /* Flex direction column on mobile */
+  .mobile-flex-col {
+    flex-direction: column;
+  }
+
+  /* Stack items vertically */
+  .mobile-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  /* Center on mobile */
+  .mobile-center {
+    text-align: center;
+    justify-content: center;
+  }
+}
+
+/* ============================================
+   TABLET STYLES (768px to 1023px)
+   ============================================ */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+
+  /* Grid - 2 columns */
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Utility: Hide on tablet */
+  .hide-tablet {
+    display: none !important;
+  }
+
+  /* Cards */
+  .card-header,
+  .card-body,
+  .card-footer {
+    padding: var(--spacing-lg);
+  }
+}
+
+/* ============================================
+   DESKTOP STYLES (min-width: 1024px)
+   ============================================ */
+
+@media (min-width: 1024px) {
+
+  /* Utility: Hide on desktop */
+  .hide-desktop {
+    display: none !important;
+  }
+
+  /* Utility: Show only on desktop */
+  .show-desktop {
+    display: block;
+  }
+
+  /* Grid systems */
+  .grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ============================================
+   RESPONSIVE UTILITIES
+   ============================================ */
+
+/* Grid base */
+.grid {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+/* Flex utilities */
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.gap-sm {
+  gap: var(--spacing-sm);
+}
+
+.gap-md {
+  gap: var(--spacing-md);
+}
+
+.gap-lg {
+  gap: var(--spacing-lg);
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+  body {
+    background: white;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .page-header,
+  .card {
+    box-shadow: none;
+  }
+
+  .sidebar,
+  .app-header,
+  .app-footer {
+    display: none !important;
+  }
+
+  .app-main {
+    margin-left: 0 !important;
+  }
+}

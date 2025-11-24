@@ -88,12 +88,14 @@ defineEmits(['click'])
 }
 
 .btn-primary {
-  background: var(--color-azul);
+  background: var(--color-primary);
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #003580;
+  background: #CC0000;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
 }
 
 .btn-secondary {

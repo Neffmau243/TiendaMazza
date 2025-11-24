@@ -65,12 +65,14 @@ defineEmits(['row-click'])
 .base-table {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
   background: white;
+  min-width: 600px;
 }
 
 .table th,
@@ -86,6 +88,7 @@ defineEmits(['row-click'])
   color: #666;
   font-size: 0.875rem;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .table tbody tr {
@@ -112,5 +115,28 @@ defineEmits(['row-click'])
 
 .actions-cell {
   white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .table th,
+  .table td {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .table th {
+    font-size: 0.75rem;
+  }
+
+  .actions-cell {
+    position: sticky;
+    right: 0;
+    background: white;
+    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .table tbody tr:hover .actions-cell {
+    background: #f9f9f9;
+  }
 }
 </style>

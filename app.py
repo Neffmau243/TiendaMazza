@@ -3,8 +3,10 @@ Revenge Backend - Sistema de Gestión de Tienda
 Aplicación principal Flask con arquitectura modular
 
 CONFIGURACIÓN DE FRONTEND:
-- Desarrollo: Frontend Vue corre en puerto 5173 (npm run dev)
-- Producción: Flask sirve el build de Vue desde /revenge-pos-vue/dist
+- Por defecto: Flask sirve el build de Vue (Producción)
+- Modo desarrollo: python app.py --dev (Frontend separado en puerto 5173)
+  
+Ejecuta 'npm run build' en revenge-pos-vue/ antes del primer uso.
 """
 
 import sys
@@ -162,11 +164,12 @@ def create_app(serve_frontend=False):
 
 if __name__ == '__main__':
     # Determinar modo de ejecución
-    # Para desarrollo: python app.py (solo API)
-    # Para producción: python app.py --production (API + Frontend)
+    # Por defecto: PRODUCCIÓN (API + Frontend Vue)
+    # Para desarrollo: python app.py --dev (solo API, Frontend separado en puerto 5173)
     
     import sys
-    serve_frontend = '--production' in sys.argv or '--prod' in sys.argv
+    # INVERTIDO: Por defecto sirve frontend, usa --dev para modo desarrollo
+    serve_frontend = not ('--dev' in sys.argv or '--development' in sys.argv)
     
     app = create_app(serve_frontend=serve_frontend)
     port = int(os.getenv('PORT', 5000))
@@ -179,7 +182,8 @@ if __name__ == '__main__':
     if serve_frontend:
         print("📦 Modo: PRODUCCIÓN (API + Frontend Vue)")
         print(f"🌐 Aplicación completa: http://localhost:{port}")
-        print("⚠️  Asegúrate de haber ejecutado 'npm run build' en revenge-pos-vue/")
+        print("✅ Frontend servido desde Flask")
+        print("\n💡 Para modo desarrollo: python app.py --dev")
     else:
         print("🔧 Modo: DESARROLLO (Solo API)")
         print(f"🔌 API Backend: http://localhost:{port}")
@@ -187,7 +191,6 @@ if __name__ == '__main__':
         print("\n📝 Para iniciar el frontend:")
         print("   cd revenge-pos-vue")
         print("   npm run dev")
-        print("\n💡 Para modo producción: python app.py --production")
     
     print("="*60 + "\n")
     

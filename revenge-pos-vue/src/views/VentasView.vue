@@ -221,7 +221,7 @@ onMounted(() => {
 
 .stat-card {
   padding: 1.5rem;
-  background: linear-gradient(135deg, var(--color-azul) 0%, #0056b3 100%);
+  background: linear-gradient(135deg, var(--color-rojo) 0%, #D11820 100%);
   color: white;
   border-radius: var(--border-radius);
   display: flex;

@@ -15,6 +15,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--color-azul) 0%, var(--color-amarillo) 100%);
+  background: linear-gradient(135deg, var(--color-rojo) 0%, var(--color-amarillo) 100%);
 }
 </style>

@@ -67,4 +67,22 @@ defineProps({
   border-top: 1px solid #eee;
   background: #f9f9f9;
 }
+
+@media (max-width: 767px) {
+  .card-header {
+    padding: 1rem;
+  }
+
+  .card-title {
+    font-size: 1.125rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  .card-footer {
+    padding: 1rem;
+  }
+}
 </style>

@@ -5,7 +5,6 @@ import router from './router'
 import App from './App.vue'
 
 // Estilos globales
-import './assets/styles/variables.css'
 import './assets/styles/main.css'
 import './assets/styles/components.css'
 

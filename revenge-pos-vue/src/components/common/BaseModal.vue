@@ -150,4 +150,57 @@ const handleOverlayClick = () => {
 .modal-leave-to .modal-container {
   transform: scale(0.9);
 }
+
+@media (max-width: 767px) {
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal-container {
+    max-height: 95vh;
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+    max-width: 100% !important;
+  }
+
+  .modal-header {
+    padding: 1rem;
+  }
+
+  .modal-title {
+    font-size: 1.125rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  .modal-footer {
+    padding: 1rem;
+    flex-direction: column-reverse;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
+
+  .modal-enter-from .modal-container,
+  .modal-leave-to .modal-container {
+    transform: translateY(100%);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .modal-small {
+    max-width: 90%;
+  }
+
+  .modal-medium {
+    max-width: 90%;
+  }
+
+  .modal-large {
+    max-width: 90%;
+  }
+}
 </style>

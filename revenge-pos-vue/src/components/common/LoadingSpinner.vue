@@ -34,8 +34,8 @@ const sizeClass = computed(() => `spinner-${props.size}`)
 }
 
 .spinner {
-  border: 3px solid rgba(0, 72, 160, 0.1);
-  border-top-color: var(--color-azul);
+  border: 3px solid rgba(237, 28, 36, 0.1);
+  border-top-color: var(--color-rojo);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

@@ -371,5 +371,23 @@ onMounted(() => {
   .pos-grid {
     grid-template-columns: 1fr;
   }
+
+  .search-section {
+    flex-direction: column;
+  }
+
+  .cart-items {
+    max-height: 300px;
+  }
+}
+
+@media (max-width: 767px) {
+  .cart-actions {
+    flex-direction: column;
+  }
+
+  .total-row.total {
+    font-size: 1.25rem;
+  }
 }
 </style>

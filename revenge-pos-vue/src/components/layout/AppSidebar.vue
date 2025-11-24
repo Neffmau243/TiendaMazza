@@ -1,8 +1,7 @@
-<!-- components/layout/AppSidebar.vue -->
 <template>
   <aside class="sidebar">
     <div class="sidebar-header">
-      <h1 class="sidebar-title">Mazza</h1>
+      <img src="@/assets/images/opg-tw-plazavea.webp" alt="Plaza Vea Logo" class="sidebar-logo" />
     </div>
 
     <nav class="sidebar-nav">
@@ -19,7 +18,7 @@
     </nav>
 
     <div class="sidebar-footer">
-      <button @click="auth.logout" class="btn-logout">
+      <button @click="handleLogout" class="btn-logout">
         <i class="fas fa-sign-out-alt"></i>
         <span>Cerrar Sesión</span>
       </button>
@@ -57,49 +56,59 @@ const menuItems = computed(() => {
       return order.indexOf(a.path.slice(1)) - order.indexOf(b.path.slice(1))
     })
 })
+
+const handleLogout = () => {
+  auth.logout()
+}
 </script>
 
 <style scoped>
 .sidebar {
-  width: 250px;
-  background: var(--color-azul);
-  color: white;
+  width: var(--sidebar-width);
+  background: var(--color-primary);
+  color: var(--color-white);
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
   display: flex;
   flex-direction: column;
-  z-index: 1000;
+  z-index: var(--z-fixed);
   box-shadow: var(--shadow-lg);
 }
 
 .sidebar-header {
-  padding: 1.5rem;
+  padding: var(--spacing-lg);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
 }
 
-.sidebar-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin: 0;
-  color: white;
+.sidebar-logo {
+  width: 100%;
+  max-width: 180px;
+  height: auto;
+  object-fit: contain;
 }
 
 .sidebar-nav {
   flex: 1;
-  padding: 1rem 0;
+  padding: var(--spacing-md) 0;
   overflow-y: auto;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.875rem 1.5rem;
-  color: white;
+  gap: var(--spacing-md);
+  padding: 0.875rem var(--spacing-lg);
+  color: var(--color-white);
   text-decoration: none;
-  transition: background var(--transition-base);
+  transition: all var(--transition);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
 }
 
 .nav-item:hover {
@@ -107,17 +116,19 @@ const menuItems = computed(() => {
 }
 
 .nav-item.active {
-  background: rgba(255, 255, 255, 0.2);
-  border-left: 4px solid var(--color-amarillo);
+  background: rgba(255, 255, 255, 0.15);
+  border-left: 4px solid var(--color-secondary);
+  font-weight: var(--font-weight-semibold);
 }
 
 .nav-item i {
   width: 20px;
   text-align: center;
+  font-size: 1.125rem;
 }
 
 .sidebar-footer {
-  padding: 1rem;
+  padding: var(--spacing-md);
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -126,28 +137,27 @@ const menuItems = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--spacing-sm);
   padding: 0.75rem;
   background: rgba(255, 255, 255, 0.1);
-  color: white;
+  color: var(--color-white);
   border: none;
   border-radius: var(--border-radius);
   cursor: pointer;
-  transition: background var(--transition-base);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  transition: all var(--transition);
 }
 
 .btn-logout:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
-@media (max-width: 768px) {
+/* Mobile */
+@media (max-width: 767px) {
   .sidebar {
-    transform: translateX(-100%);
-    transition: transform var(--transition-base);
-  }
-  
-  .sidebar.open {
-    transform: translateX(0);
+    display: none; /* Simplificado para mobile - mostraremos un header con menú */
   }
 }
 </style>

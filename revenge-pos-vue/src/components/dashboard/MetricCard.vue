@@ -1,4 +1,3 @@
-<!-- components/dashboard/MetricCard.vue -->
 <template>
   <div class="metric-card" :class="`metric-${color}`">
     <div class="metric-icon">
@@ -44,34 +43,36 @@ defineProps({
 
 <style scoped>
 .metric-card {
-  background: white;
-  padding: 1.5rem;
+  background: var(--color-surface);
+  padding: var(--spacing-lg);
   border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow);
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  transition: all var(--transition-base);
+  gap: var(--spacing-lg);
+  transition: all var(--transition);
+  min-width: 0;
 }
 
 .metric-card:hover {
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
 
 .metric-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--border-radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.75rem;
+  flex-shrink: 0;
 }
 
 .metric-blue .metric-icon {
-  background: rgba(0, 72, 160, 0.1);
-  color: var(--color-azul);
+  background: rgba(237, 28, 36, 0.1);
+  color: var(--color-primary);
 }
 
 .metric-green .metric-icon {
@@ -90,26 +91,62 @@ defineProps({
 }
 
 .metric-red .metric-icon {
-  background: rgba(220, 53, 69, 0.1);
+  background: rgba(255, 0, 0, 0.1);
   color: var(--color-danger);
 }
 
 .metric-content {
   flex: 1;
+  min-width: 0;
 }
 
 .metric-title {
-  margin: 0 0 0.5rem 0;
-  font-size: 0.875rem;
-  color: #666;
+  margin: 0 0 var(--spacing-sm) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-light);
   text-transform: uppercase;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.5px;
+  line-height: var(--line-height-tight);
 }
 
 .metric-value {
   margin: 0;
-  font-size: 1.75rem;
-  font-weight: bold;
-  color: var(--color-texto);
+  font-size: 1.875rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .metric-card {
+    padding: var(--spacing-md);
+    gap: var(--spacing-md);
+  }
+
+  .metric-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 1.5rem;
+  }
+
+  .metric-value {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .metric-card {
+    padding: var(--spacing-md);
+  }
+
+  .metric-title {
+    font-size: var(--font-size-xs);
+  }
+
+  .metric-value {
+    font-size: 1.375rem;
+  }
 }
 </style>
