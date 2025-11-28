@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lector de Códigos de Barras - QuaggaJS</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Lector EAN-13</h1>
+        
+        <div class="controls">
+            <button id="startBtn" onclick="startScanner()">🚀 Iniciar</button>
+            <button id="stopBtn" onclick="stopScanner()" disabled>⏹️ Detener</button>
+            <button id="clearBtn" onclick="clearHistory()">🗑️ Limpiar</button>
+        </div>
+        
+        <div class="scanner-container">
+            <div id="scanner"></div>
+            <div class="scanner-overlay">
+                <div class="scanner-guide">
+                    <div class="scanner-corners corner-tl"></div>
+                    <div class="scanner-corners corner-tr"></div>
+                    <div class="scanner-corners corner-bl"></div>
+                    <div class="scanner-corners corner-br"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="loading" class="loading" style="display: none;">
+            📷 Inicializando cámara...
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div id="result" class="result" style="display: none;">
+            <h3>✅ Código Detectado:</h3>
+            <div id="result-code" class="result-code"></div>
+            <div id="result-format" style="margin-top: 10px; color: #666;"></div>
+        </div>
+        
+        <div class="history">
+            <h3>📋 Historial</h3>
+            <div id="history-list">
+                <div style="text-align: center; color: #666; padding: 20px;">
+                    No hay códigos escaneados
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QuaggaJS desde CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

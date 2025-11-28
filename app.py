@@ -106,22 +106,40 @@ def create_app(serve_frontend=False):
     # ==================== RUTAS DEL FRONTEND (Solo en producción) ====================
     
     if serve_frontend and frontend_folder:
-        @app.route('/')
-        def index():
-            """Servir index.html de Vue"""
-            return send_from_directory(app.static_folder, 'index.html')
-        
+        @app.route('/', defaults={'path': ''})
         @app.route('/<path:path>')
-        def serve_vue(path):
+        def serve_spa(path):
             """
-            Servir archivos estáticos de Vue o index.html para rutas SPA
+            Servir SPA de Vue - Maneja todas las rutas que no sean /api
             """
-            # Si el archivo existe, servirlo
+            # Si es una ruta API, dejar que los blueprints la manejen
+            if path.startswith('api'):
+                return jsonify({'error': 'API endpoint not found'}), 404
+            
+            # Si el archivo existe en assets, servirlo
+            if path.startswith('assets/'):
+                file_path = os.path.join(app.static_folder, path)
+                if os.path.exists(file_path):
+                    return send_from_directory(app.static_folder, path)
+            
+            # Para cualquier archivo que exista (CSS, JS, imágenes)
             file_path = os.path.join(app.static_folder, path)
-            if os.path.exists(file_path) and os.path.isfile(file_path):
+            if path and os.path.exists(file_path) and os.path.isfile(file_path):
                 return send_from_directory(app.static_folder, path)
             
-            # Si no existe, servir index.html (para Vue Router)
+            # Para todas las rutas de Vue Router, servir index.html
+            return send_from_directory(app.static_folder, 'index.html')
+        
+        @app.errorhandler(404)
+        def not_found(e):
+            """
+            Manejar 404 - Servir index.html para rutas de Vue Router
+            """
+            from flask import request
+            # Si es una petición a /api, devolver JSON
+            if request.path.startswith('/api'):
+                return jsonify({'error': 'Not found', 'path': request.path}), 404
+            # Si no, servir index.html para Vue Router
             return send_from_directory(app.static_folder, 'index.html')
     
     # ==================== RUTAS DE INFORMACIÓN ====================

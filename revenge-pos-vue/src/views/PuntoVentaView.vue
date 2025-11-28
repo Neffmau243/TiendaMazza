@@ -20,6 +20,7 @@
           >
             Buscar
           </BaseButton>
+          <BarcodeScanner @code-scanned="onCodeScanned" />
         </div>
 
         <div v-if="productoEncontrado" class="producto-info">
@@ -130,6 +131,7 @@ import BaseCard from '@/components/common/BaseCard.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import CarritoItem from '@/components/ventas/CarritoItem.vue'
+import BarcodeScanner from '@/components/ventas/BarcodeScanner.vue'
 import { formatCurrency } from '@/utils/formatters'
 
 const cartStore = useCartStore()
@@ -144,6 +146,13 @@ const searchError = ref('')
 const metodoPago = ref('')
 const processing = ref(false)
 const barcodeInput = ref(null)
+
+// Función para manejar código escaneado desde la cámara
+const onCodeScanned = (code) => {
+  codigoBarras.value = code
+  toast.info(`Código escaneado: ${code}`)
+  buscarProducto()
+}
 
 const buscarProducto = async () => {
   if (!codigoBarras.value.trim()) return
@@ -248,6 +257,13 @@ onMounted(() => {
   display: flex;
   gap: 1rem;
   margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.search-section > :first-child {
+  flex: 1;
+  min-width: 200px;
 }
 
 .producto-info {

@@ -70,12 +70,15 @@
       @close="closeModal"
     >
       <form @submit.prevent="saveProducto">
-        <BaseInput
-          v-model="form.values.codigo_barras"
-          label="Código de Barras"
-          :error="form.errors.codigo_barras"
-          required
-        />
+        <div class="form-row">
+          <BaseInput
+            v-model="form.values.codigo_barras"
+            label="Código de Barras"
+            :error="form.errors.codigo_barras"
+            required
+          />
+          <BarcodeScanner @code-scanned="onCodeScanned" />
+        </div>
         <BaseInput
           v-model="form.values.nombre"
           label="Nombre"
@@ -162,6 +165,7 @@ import BaseTable from '@/components/common/BaseTable.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import BaseInput from '@/components/common/BaseInput.vue'
 import BaseModal from '@/components/common/BaseModal.vue'
+import BarcodeScanner from '@/components/ventas/BarcodeScanner.vue'
 
 const productosStore = useProductosStore()
 const categoriasStore = useCategoriasStore()
@@ -172,6 +176,12 @@ const toast = useToast()
 const searchTerm = ref('')
 const saving = ref(false)
 const categorias = ref([])
+
+// Función para manejar código escaneado
+const onCodeScanned = (code) => {
+  form.values.codigo_barras = code
+  toast.success(`Código escaneado: ${code}`)
+}
 
 // Verificar si el usuario puede editar (Admin o Almacenero)
 const canEdit = computed(() => {
@@ -304,6 +314,17 @@ onMounted(async () => {
 
 .filters {
   margin-bottom: 1.5rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+
+.form-row > :first-child {
+  flex: 1;
 }
 
 .form-group {
