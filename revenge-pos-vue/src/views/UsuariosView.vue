@@ -79,6 +79,20 @@
           :error="form.errors.password"
           required
         />
+        <div v-if="modal.data.value" class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="cambiarPassword" />
+            Cambiar contraseña
+          </label>
+        </div>
+        <BaseInput
+          v-if="modal.data.value && cambiarPassword"
+          v-model="form.values.password"
+          type="password"
+          label="Nueva Contraseña"
+          :error="form.errors.password"
+          placeholder="Ingresa la nueva contraseña"
+        />
         <div class="form-group">
           <label>Rol</label>
           <select v-model="form.values.rol_id" class="form-select">
@@ -124,6 +138,7 @@ const modal = useModal()
 const toast = useToast()
 
 const saving = ref(false)
+const cambiarPassword = ref(false)
 
 const columns = [
   { key: 'nombre', label: 'Nombre' },
@@ -149,12 +164,14 @@ const form = useForm(
 )
 
 const openModal = (mode, data = null) => {
+  cambiarPassword.value = false
   if (data) {
     form.setValues({
       nombre: data.nombre,
       email: data.email,
       usuario: data.usuario,
-      rol_id: data.rol_id.toString()
+      rol_id: data.rol_id.toString(),
+      password: ''
     })
   } else {
     form.reset()
@@ -172,10 +189,20 @@ const saveUsuario = async () => {
 
   saving.value = true
   
-  const usuarioData = {
-    ...form.values,
-    created_by: authStore.user?.id
-  }
+  // Si es edición, incluir password solo si se marcó cambiar contraseña
+  const usuarioData = modal.data.value 
+    ? {
+        nombre: form.values.nombre,
+        email: form.values.email,
+        usuario: form.values.usuario,
+        rol_id: parseInt(form.values.rol_id),
+        ...(cambiarPassword.value && form.values.password ? { password: form.values.password } : {})
+      }
+    : {
+        ...form.values,
+        rol_id: parseInt(form.values.rol_id),
+        created_by: authStore.user?.id
+      }
   
   const result = modal.data.value
     ? await usuariosStore.updateUsuario(modal.data.value.id, usuarioData)
@@ -183,6 +210,12 @@ const saveUsuario = async () => {
 
   if (result.success) {
     toast.success(modal.data.value ? 'Usuario actualizado' : 'Usuario creado')
+    
+    // Si se editó el usuario logueado, actualizar el authStore
+    if (modal.data.value && modal.data.value.id === authStore.user?.id) {
+      authStore.updateUserData(usuarioData)
+    }
+    
     await usuariosStore.fetchUsuarios()
     closeModal()
   } else {
@@ -237,6 +270,20 @@ onMounted(() => {
   margin-bottom: 0.5rem;
   font-weight: 500;
   color: var(--color-texto);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 400 !important;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
 }
 
 .form-select {

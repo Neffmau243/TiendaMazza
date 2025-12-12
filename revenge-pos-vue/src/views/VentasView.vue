@@ -240,7 +240,14 @@ onMounted(() => {
 }
 
 .venta-detalle {
-  padding: 1rem 0;
+  padding: 0;
+}
+
+.venta-detalle h3 {
+  font-size: 1.1rem;
+  color: var(--color-texto);
+  margin: 1.5rem 0 1rem 0;
+  font-weight: 600;
 }
 
 .detalle-header {
@@ -249,28 +256,50 @@ onMounted(() => {
   border-bottom: 2px solid #eee;
 }
 
+.detalle-info {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
 .detalle-info p {
-  margin: 0.5rem 0;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.detalle-info strong {
+  color: var(--color-texto);
+  font-weight: 600;
 }
 
 .detalle-totales {
   margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 2px solid #eee;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: var(--border-radius);
 }
 
 .total-row {
   display: flex;
   justify-content: space-between;
-  padding: 0.5rem 0;
+  padding: 0.75rem 0;
   font-size: 1rem;
+  color: var(--color-texto);
+}
+
+.total-row span:first-child {
+  font-weight: 500;
+}
+
+.total-row span:last-child {
+  font-weight: 600;
 }
 
 .total-row.total {
   font-size: 1.5rem;
   font-weight: bold;
-  color: var(--color-azul);
-  border-top: 2px solid var(--color-azul);
+  color: var(--color-rojo);
+  border-top: 2px solid var(--color-rojo);
   padding-top: 1rem;
   margin-top: 0.5rem;
 }

@@ -46,9 +46,18 @@ class UsuarioService:
         if not usuario:
             raise ValueError("Usuario no encontrado")
         
-        # No permitir actualizar password por este método
-        if 'password' in datos or 'password_hash' in datos:
-            raise ValueError("Use el método de cambio de contraseña")
+        # Si se incluye password, hashearlo
+        if 'password' in datos and datos['password']:
+            from utils.password_helper import PasswordHelper
+            datos['password_hash'] = PasswordHelper.hash_password(datos['password'])
+            datos.pop('password')
+        elif 'password' in datos:
+            # Si password está vacío, no actualizar
+            datos.pop('password')
+        
+        # Eliminar password_hash si viene vacío
+        if 'password_hash' in datos and not datos['password_hash']:
+            datos.pop('password_hash')
         
         # Validar email si se actualiza
         if 'email' in datos:

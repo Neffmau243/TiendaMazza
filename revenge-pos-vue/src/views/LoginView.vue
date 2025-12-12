@@ -25,6 +25,7 @@
                 v-model="form.values.email"
                 type="email"
                 placeholder="usuario@revenge.com"
+                autocomplete="email"
                 :disabled="loading"
                 @blur="form.touch('email')"
                 required
@@ -45,6 +46,7 @@
                 v-model="form.values.password"
                 type="password"
                 placeholder="••••••••"
+                autocomplete="current-password"
                 :disabled="loading"
                 @blur="form.touch('password')"
                 required

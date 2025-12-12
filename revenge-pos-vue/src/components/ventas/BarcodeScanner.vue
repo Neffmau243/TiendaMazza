@@ -135,15 +135,46 @@ const closeScanner = () => {
   showScanner.value = false
 }
 
-const startScanner = () => {
+const startScanner = async () => {
   if (isActive.value) return
 
   loading.value = true
   error.value = ''
 
+  // Verificar si estamos en contexto seguro
+  const isSecureContext = window.isSecureContext || 
+                         window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1'
+
+  if (!isSecureContext) {
+    error.value = 'La cámara solo funciona en HTTPS o localhost. Accede desde: http://localhost:5000 o http://127.0.0.1:5000'
+    loading.value = false
+    return
+  }
+
   // Verificar soporte del navegador
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     error.value = 'Tu navegador no soporta acceso a la cámara'
+    loading.value = false
+    return
+  }
+
+  // Intentar obtener permiso de cámara primero
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+    // Detener el stream de prueba
+    stream.getTracks().forEach(track => track.stop())
+  } catch (err) {
+    console.error('Error al obtener permiso de cámara:', err)
+    if (err.name === 'NotAllowedError') {
+      error.value = 'Permiso de cámara denegado. Por favor, permite el acceso a la cámara en la configuración de tu navegador.'
+    } else if (err.name === 'NotFoundError') {
+      error.value = 'No se encontró ninguna cámara en tu dispositivo.'
+    } else if (err.name === 'NotReadableError') {
+      error.value = 'La cámara está siendo usada por otra aplicación. Cierra otras aplicaciones que usen la cámara.'
+    } else {
+      error.value = 'Error al acceder a la cámara. Asegúrate de usar http://localhost:5000'
+    }
     loading.value = false
     return
   }

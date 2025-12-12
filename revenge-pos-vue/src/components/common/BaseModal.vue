@@ -59,22 +59,24 @@ const handleOverlayClick = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
+  z-index: 9999;
+  padding: 2rem 1rem;
+  overflow-y: auto;
 }
 
 .modal-container {
   background: white;
   border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-xl);
-  max-height: 90vh;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
   width: 100%;
+  margin: auto;
 }
 
 .modal-small {

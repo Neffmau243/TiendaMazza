@@ -65,6 +65,14 @@ export const useAuthStore = defineStore('auth', () => {
     return false
   }
 
+  const updateUserData = (userData) => {
+    // Actualizar datos del usuario en sesión
+    if (user.value && userData.id === user.value.id) {
+      user.value = { ...user.value, ...userData }
+      sessionStorage.setItem('user', JSON.stringify(user.value))
+    }
+  }
+
   // Inicializar desde sessionStorage
   checkAuth()
 
@@ -85,6 +93,7 @@ export const useAuthStore = defineStore('auth', () => {
     // Actions
     login,
     logout,
-    checkAuth
+    checkAuth,
+    updateUserData
   }
 })

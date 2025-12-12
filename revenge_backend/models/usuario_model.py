@@ -86,7 +86,7 @@ class UsuarioModel:
     @staticmethod
     def actualizar(usuario_id, **kwargs):
         """Actualiza un usuario"""
-        campos_permitidos = ['nombre', 'email', 'rol_id', 'estado_id']
+        campos_permitidos = ['nombre', 'email', 'rol_id', 'estado_id', 'password_hash']
         campos = []
         valores = []
         
